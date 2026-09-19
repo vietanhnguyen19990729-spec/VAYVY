@@ -5,6 +5,7 @@
 ## Tóm tắt nhanh
 
 - **Đang ở đâu**: v2.1 — chương **Lời mời hẹn buổi tiếp theo** (nút `Đồng ý`/`Từ chối`, đã sửa nền + đường chạy). Có git, có `build.js`, asset gốc đã cứu lại.
+- **Trang đã lên mạng**: `https://claude.ai/artifact/2LB1Y88rNRY7dFS334jJKj` (ai có link cũng mở được). Sửa xong thì `node build.js` rồi đăng đè `index.html` lên ĐÚNG địa chỉ đó — link không đổi.
 - **Tiếp theo (ưu tiên)**: 1) **test thật trên điện thoại** · 2) bật đồng bộ Firebase theo `SYNC.md` (cần anh bấm vài cái trong tài khoản Google) · 3) gỡ phụ thuộc mạng (three.js, Google Fonts).
 - **Rủi ro lớn nhất**: trang hiện **chết hoàn toàn nếu không có Internet** — `import * as THREE from 'three'` lấy từ CDN, import hỏng là cả file JS không chạy, mất luôn cả chương lời mời.
 
@@ -64,6 +65,9 @@
 ## Nhật ký
 
 ### 2026-09-19 — Sửa chương lời mời theo góp ý
+
+- Bỏ chữ *(để trống cũng được)* ở ô lời nhắn.
+- **Đăng bản mới lên link** (bản 13). Link đã có từ trước, nên chỉ đăng đè, không tạo link mới.
 
 - **Hai nút nổi hẳn lên** (chỉ trong `#askRow`, nút khác cả trang giữ nguyên): to hơn (13px),
   `Đồng ý` có nền chuyển sắc hồng + quầng sáng + nhịp thở nhẹ; `Từ chối` nền đặc + viền xanh sáng

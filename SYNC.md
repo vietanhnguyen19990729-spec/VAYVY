@@ -4,10 +4,19 @@
 
 | | Làm gì | Kết quả |
 |---|---|---|
-| **Bước A — BẮT BUỘC** | Đưa trang lên mạng (Phần 3 ở dưới) | Vy chốt xong bấm **"Gửi cho anh"** → gửi anh một đường link → anh bấm là thấy đúng thẻ hẹn |
+| **Bước A — XONG rồi** | Trang đã ở trên mạng | Vy chốt xong bấm **"Gửi cho anh"** → gửi anh một đường link → anh bấm là thấy đúng thẻ hẹn |
 | **Bước B — tuỳ chọn** | Thêm Firebase (Phần 1 + 2) | Bỏ luôn bước gửi tay: Vy bấm xong, anh mở trang là tự thấy |
 
-**Vì sao bước A bắt buộc**: nếu trang chỉ là một file gửi qua Zalo, đường link Vy gửi sẽ trỏ
+**Địa chỉ của trang** (ai có link cũng mở được, không cần đăng nhập):
+
+```
+https://claude.ai/artifact/2LB1Y88rNRY7dFS334jJKj
+```
+
+Mỗi lần sửa xong, chạy `node build.js` rồi đăng đè `index.html` lên **đúng địa chỉ đó** —
+link không đổi, Vy đang mở cũng thấy bản mới. Đừng tạo địa chỉ mới, Vy sẽ giữ link cũ.
+
+**Vì sao phải có bước này**: nếu trang chỉ là một file gửi qua Zalo, đường link Vy gửi sẽ trỏ
 vào ổ đĩa máy Vy (`file:///C:/Users/.../index.html`) — máy anh mở không ra. Phải có một địa chỉ
 chung trên mạng thì cả link chia sẻ lẫn Firebase mới có ý nghĩa.
 
@@ -56,9 +65,9 @@ Rồi chạy:
 node build.js
 ```
 
-## Phần 3 — Đưa trang lên mạng
+## Phần 3 — Đưa trang lên mạng (đã xong)
 
-Phải có địa chỉ chung thì hai máy mới mở cùng một trang.
+Trang đang ở địa chỉ ghi ở đầu file. Nếu sau này muốn chuyển chỗ khác:
 
 - **Nhanh nhất**: `app.netlify.com/drop` — kéo thả `index.html` vào, có link ngay.
   Muốn giữ link lâu dài thì đăng ký tài khoản miễn phí.
