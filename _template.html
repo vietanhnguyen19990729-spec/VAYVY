@@ -245,8 +245,11 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
 }
 .lyricInner .lw{color:#7f93ab;transition:color .45s ease,text-shadow .45s ease}
 .lyricInner .lw.lit{color:var(--aqua);text-shadow:0 0 14px rgba(150,220,255,.35)}
-@media (max-width:600px){
-  .lyricInner{font-size:.8rem}
+@media (max-width:620px){
+  /* console bọc xuống nhiều hàng trên màn hẹp (xem #console ở @media max-width:620px bên dưới)
+     nên lyricBar cần chừa khoảng cao hơn hẳn để không bị đè khuất phía sau thanh nút */
+  #lyricBar{bottom:calc(122px + env(safe-area-inset-bottom,0px));max-width:calc(100vw - 20px)}
+  .lyricInner{font-size:.8rem;white-space:normal;line-height:1.4}
 }
 
 /* chỉ hiện khi trình duyệt chặn nhạc tự phát — chạm một cái là tắt hẳn, không thành nút cố định */
