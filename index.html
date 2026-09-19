@@ -243,6 +243,109 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
 .armed{opacity:0;transform:translateY(22px)}
 .armed.in{opacity:1;transform:none;transition:opacity 1s cubic-bezier(.2,.7,.2,1),transform 1s cubic-bezier(.2,.7,.2,1)}
 
+/* ==================== chương lời mời · hẹn buổi tiếp theo ==================== */
+/* .btn của thanh điều khiển là display:flex nên đè mất display:none mặc định
+   của thuộc tính hidden -> phải ép lại, không thì nút ẩn vẫn hiện. */
+[hidden]{display:none!important}
+
+.ask{max-width:56ch}
+.ask-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:34px;min-height:60px;
+  transition:opacity .6s ease}
+.ask-row.done{opacity:0;pointer-events:none}
+.ask-row .cta{margin-top:0}
+.cta.yes{border-color:rgba(255,158,186,.42);color:#fff2f6;background:rgba(255,190,208,.05)}
+.cta.yes:hover{border-color:rgba(255,170,196,.85);
+  box-shadow:0 0 0 1px rgba(255,158,186,.12),0 18px 54px -22px rgba(255,120,160,.62)}
+
+/* nút KHÔNG: lúc đầu nằm trong hàng cho cân, vừa bị rê tới gần là nhảy sang
+   position:fixed để chạy khắp màn hình mà không kéo lệch bố cục của cả chương.
+   Vị trí đổi TỨC THÌ (transition chỉ nhận transform) — cho nó trượt mượt thì
+   rê chuột nhanh là bắt được, mất cả trò. */
+.btn-no{
+  display:inline-flex;align-items:center;cursor:default;
+  font-family:var(--hud);font-weight:400;font-size:11.5px;letter-spacing:.36em;text-transform:uppercase;
+  color:var(--mute);background:rgba(10,20,34,.35);
+  border:1px solid var(--line);border-radius:1px;padding:19px 34px 18px;
+  transition:transform .34s cubic-bezier(.2,.9,.3,1.4),opacity .5s ease;
+  user-select:none;-webkit-user-select:none
+}
+.btn-no.loose{position:fixed;z-index:7;margin:0}
+.btn-no.gone{opacity:0;transform:scale(.3) rotate(-14deg);pointer-events:none}
+
+.lewlew{position:fixed;z-index:8;pointer-events:none;white-space:nowrap;
+  font-family:var(--voice);font-style:italic;font-weight:400;
+  color:#ffd2de;text-shadow:0 0 22px rgba(255,140,175,.55);
+  animation:lewfly 1.25s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes lewfly{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.6) rotate(var(--rot,0deg))}
+  22%{opacity:1;transform:translate(-50%,-64%) scale(1.14) rotate(var(--rot,0deg))}
+  100%{opacity:0;transform:translate(-50%,-190%) scale(1) rotate(var(--rot,0deg))}
+}
+.ask-note{font-family:var(--hud);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--rose);margin:20px 0 0;opacity:0;transition:opacity .9s ease}
+.ask-note.on{opacity:.92}
+
+.plan{margin-top:30px;max-width:660px;opacity:0;transform:translateY(16px);
+  transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.plan.in{opacity:1;transform:none}
+.plan-grid{display:flex;flex-wrap:wrap;gap:14px}
+.plan .cta{margin-top:24px}
+.field{flex:1 1 200px;min-width:0}
+.field.wide{flex:1 1 100%}
+.field label{display:block;font-family:var(--hud);font-size:9.5px;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--aqua-dim);margin-bottom:8px}
+.field label span{color:var(--mute);letter-spacing:.14em}
+/* color-scheme:dark để bảng chọn ngày/giờ của máy ra nền tối, không loè một mảng trắng */
+.field input,.field textarea{
+  width:100%;color-scheme:dark;display:block;
+  font-family:var(--hud);font-size:15px;color:var(--star);
+  background:var(--glass);border:1px solid var(--line);border-radius:1px;
+  padding:13px 14px;outline:none;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  transition:border-color .3s ease,box-shadow .3s ease}
+.field textarea{font-family:var(--body);font-size:14px;line-height:1.6;resize:vertical;min-height:64px}
+.field input:focus,.field textarea:focus{border-color:rgba(255,158,186,.6);
+  box-shadow:0 0 0 1px rgba(255,158,186,.18),0 0 34px -12px rgba(255,140,175,.5)}
+.field textarea::placeholder{color:#5f748d}
+.plan-note{font-family:var(--hud);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--aqua-dim);margin:16px 0 0;min-height:13px;transition:color .3s ease}
+.plan-note.warn{color:var(--ember)}
+
+.card{border:1px solid var(--line);background:var(--glass);
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  padding:20px 24px 18px;max-width:430px;position:relative;margin-top:30px;
+  opacity:0;transform:translateY(16px);
+  transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.card.in{opacity:1;transform:none}
+.card::before{content:"";position:absolute;left:-1px;top:16px;bottom:16px;width:2px;background:var(--rose)}
+.card-lbl{font-family:var(--hud);font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--aqua-dim)}
+.card-day{font-family:var(--hud);font-weight:600;font-size:1.6rem;line-height:1.14;color:var(--star);margin:9px 0 3px}
+.card-time{font-family:var(--hud);font-weight:600;font-size:2.5rem;line-height:1;color:var(--rose);
+  font-variant-numeric:tabular-nums}
+.card-msg{font-family:var(--voice);font-style:italic;font-size:1.18rem;line-height:1.5;color:#f0e2e8;margin:15px 0 0}
+.card-left{font-family:var(--hud);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--aqua-dim);margin-top:15px;padding-top:12px;border-top:1px solid var(--line)}
+.card-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+.mini{font-family:var(--hud);font-size:9.5px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--mute);background:transparent;border:1px solid var(--line);border-radius:1px;
+  padding:10px 14px;cursor:pointer;transition:.26s ease}
+.mini:hover{color:var(--star);border-color:rgba(120,190,215,.46)}
+.mini:focus-visible{outline:2px solid var(--aqua);outline-offset:2px}
+
+#dJump{color:#e7b9c6;border-color:rgba(255,125,158,.30);margin-left:4px}
+#dJump:hover{color:#fff;border-color:var(--rose)}
+#dJump .dot{background:var(--rose);opacity:1;box-shadow:0 0 8px var(--rose)}
+#hudNext{display:none;margin-top:3px;padding-top:3px;border-top:1px solid var(--line)}
+#hudNext.on{display:block}
+
+@media (max-width:860px){
+  .cta.yes,.btn-no{padding:16px 24px 15px;font-size:10.5px;letter-spacing:.26em}
+  .card{max-width:none}
+  .card-time{font-size:2.1rem}
+  .card-day{font-size:1.35rem}
+  .plan .cta{width:100%;justify-content:center}
+}
+
 @media (max-width:620px){
   /* left:50% làm hộp fixed chỉ còn nửa màn để co giãn -> phải neo hai mép */
   #console{left:10px;right:10px;transform:none;max-width:none;
@@ -304,6 +407,7 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
   Nguồn sáng <b id="hudStars">—</b><br>
   Hình thái <b id="hudForm">Chân dung</b><br>
   <span id="hudClock">—</span>
+  <span id="hudNext">Hẹn tới <b id="hudNextV">—</b></span>
 </div>
 
 <main class="page">
@@ -360,6 +464,56 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
     </div>
   </section>
 
+  <section id="act-date" data-form="2">
+    <div class="wrap armed">
+      <p class="eyebrow" id="askEyebrow">Đề nghị · chờ em trả lời</p>
+      <h2>Buổi tiếp theo, em nhé?</h2>
+
+      <div class="ask" id="askBox">
+        <p class="body">Mới một buổi thôi mà anh đã phải dựng cả một bầu trời để kể. Anh muốn có
+        thêm cái để đếm tiếp — nên anh hỏi thẳng: mình đi chơi buổi nữa nhé? Em chọn ngày, chọn giờ,
+        muốn dặn gì thì dặn. Còn lại anh lo.</p>
+        <div class="ask-row" id="askRow">
+          <button type="button" class="cta yes" id="btnYes"><svg viewBox="0 0 32 29" aria-hidden="true"><path fill="#ffb49e" d="M16 29S0 19.5 0 9.5A8.6 8.6 0 0 1 16 5 8.6 8.6 0 0 1 32 9.5C32 19.5 16 29 16 29z"/></svg><span>Có</span></button>
+          <button type="button" class="btn-no" id="btnNo">Không</button>
+        </div>
+        <p class="ask-note" id="askNote">Nút ấy chạy mất rồi — chỉ còn đúng một đường thôi ♥</p>
+      </div>
+
+      <div class="plan" id="planBox" hidden>
+        <div class="plan-grid">
+          <div class="field">
+            <label for="dDate">Ngày mình gặp nhau</label>
+            <input type="date" id="dDate">
+          </div>
+          <div class="field">
+            <label for="dTime">Mấy giờ em rảnh</label>
+            <input type="time" id="dTime">
+          </div>
+          <div class="field wide">
+            <label for="dMsg">Lời nhắn cho anh <span>(để trống cũng được)</span></label>
+            <textarea id="dMsg" rows="2" maxlength="200" placeholder="Nhớ đón em sớm nha…"></textarea>
+          </div>
+        </div>
+        <button type="button" class="cta yes" id="dSave"><svg viewBox="0 0 32 29" aria-hidden="true"><path fill="#ffb49e" d="M16 29S0 19.5 0 9.5A8.6 8.6 0 0 1 16 5 8.6 8.6 0 0 1 32 9.5C32 19.5 16 29 16 29z"/></svg><span>Chốt luôn</span></button>
+      </div>
+
+      <div class="card" id="dCard" hidden>
+        <div class="card-lbl">Hẹn tiếp theo</div>
+        <div class="card-day" id="cdDay">—</div>
+        <div class="card-time" id="cdTime">—</div>
+        <div class="card-msg" id="cdMsg" hidden></div>
+        <div class="card-left" id="cdLeft">—</div>
+        <div class="card-act">
+          <button type="button" class="mini" id="dShare">Gửi cho anh</button>
+          <button type="button" class="mini" id="dEdit">Đổi lịch</button>
+        </div>
+      </div>
+
+      <p class="plan-note" id="dNote"></p>
+    </div>
+  </section>
+
 </main>
 
 <footer>
@@ -376,6 +530,7 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
     <svg viewBox="0 0 32 29" aria-hidden="true"><path fill="currentColor" d="M16 29S0 19.5 0 9.5A8.6 8.6 0 0 1 16 5 8.6 8.6 0 0 1 32 9.5C32 19.5 16 29 16 29z"/></svg>
     Dành cho em
   </button>
+  <button class="btn" id="dJump" hidden><span class="dot"></span>Hẹn tiếp theo</button>
 </div>
 
 <div id="tapSound" hidden>Chạm một cái để mở nhạc</div>
@@ -1023,6 +1178,297 @@ const FX = (() => {
   }
 
   return { play, stop, get running(){ return running; } };
+})();
+
+/* ============================ lời mời buổi tiếp theo ============================
+   Ba nguồn dữ liệu, cái nào MỚI HƠN (savedAt) thì thắng:
+     link chia sẻ (#hen=…)  ·  bộ nhớ trình duyệt  ·  máy chủ
+   Không có mạng / chưa cấu hình máy chủ thì vẫn dùng được đủ, chỉ là không đồng bộ
+   sang máy bên kia — nên mọi bước đều phải chịu được lỗi mạng, không chặn nhau. */
+
+/* >>> DÁN ĐỊA CHỈ FIREBASE VÀO ĐÂY thì hai máy nhìn chung một lời hẹn. <<<
+   Để trống cũng chạy: lưu trên máy đang mở + gửi tay qua link.
+   Dạng: https://<tên>-default-rtdb.asia-southeast1.firebasedatabase.app/hen.json */
+const SYNC_URL = '';
+
+const HEN_KEY = 'vya.hen';
+const WDAY = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
+let henData = null;
+
+const askBox  = document.getElementById('askBox');
+const askRow  = document.getElementById('askRow');
+const askNote = document.getElementById('askNote');
+const planBox = document.getElementById('planBox');
+const henCard = document.getElementById('dCard');
+const dDate   = document.getElementById('dDate');
+const dTime   = document.getElementById('dTime');
+const dMsg    = document.getElementById('dMsg');
+const dNote   = document.getElementById('dNote');
+const dJump   = document.getElementById('dJump');
+const hudNext = document.getElementById('hudNext');
+const btnNo   = document.getElementById('btnNo');
+
+/* ---------- đóng gói để nhét vừa một đường link ---------- */
+function packHen(o){
+  const b = new TextEncoder().encode(JSON.stringify(o));
+  let bin = '';
+  for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function unpackHen(str){
+  try {
+    const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    const bin = atob(b64 + '='.repeat((4 - b64.length % 4) % 4));
+    const u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return JSON.parse(new TextDecoder().decode(u));
+  } catch (e){ return null; }
+}
+function validHen(o){
+  return !!o && typeof o.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(o.date);
+}
+function newerHen(a, b){
+  if (!validHen(a)) return validHen(b) ? b : null;
+  if (!validHen(b)) return a;
+  return (b.savedAt || 0) > (a.savedAt || 0) ? b : a;
+}
+
+/* ---------- bộ nhớ máy (mở bằng file:// có máy chặn hẳn -> phải bọc try) ---------- */
+function readLocalHen(){
+  try { return JSON.parse(localStorage.getItem(HEN_KEY) || 'null'); }
+  catch (e){ return null; }
+}
+function writeLocalHen(o){
+  try { localStorage.setItem(HEN_KEY, JSON.stringify(o)); } catch (e){}
+}
+
+/* ---------- máy chủ: chỉ là hai lệnh fetch, không cần thư viện nào ---------- */
+async function askServer(opts){
+  if (!SYNC_URL) return null;
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(SYNC_URL, Object.assign({ signal: ctl.signal }, opts));
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e){ return null; }
+  finally { clearTimeout(timer); }
+}
+const pushHen = o => askServer({ method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                                 body: JSON.stringify(o) }).then(r => r !== null);
+const pullHen = () => askServer({}).then(j => validHen(j) ? j : null);
+
+/* ---------- hiển thị ---------- */
+function fmtHenDay(iso){
+  const p = iso.split('-').map(Number);
+  return WDAY[new Date(p[0], p[1] - 1, p[2]).getDay()] + ' · ' + pad(p[2]) + '.' + pad(p[1]) + '.' + p[0];
+}
+function henLeft(){
+  const t = new Date(henData.date + 'T' + (henData.time || '19:00') + ':00+07:00').getTime();
+  const d = t - Date.now();
+  if (d <= 0) return 'Tới giờ rồi đó ♥';
+  const day = Math.floor(d / 86400000), hr = Math.floor(d / 3600000) % 24, mi = Math.floor(d / 60000) % 60;
+  if (day > 0) return 'Còn ' + day + ' ngày ' + hr + ' giờ nữa';
+  if (hr > 0) return 'Còn ' + hr + ' giờ ' + mi + ' phút nữa';
+  return 'Còn ' + mi + ' phút nữa';
+}
+function tickHen(){
+  if (!validHen(henData) || henCard.hidden) return;
+  document.getElementById('cdLeft').textContent = henLeft();
+}
+function revealEl(el){
+  el.hidden = false;
+  requestAnimationFrame(() => el.classList.add('in'));
+}
+function henNote(text, warn){
+  dNote.textContent = text || '';
+  dNote.classList.toggle('warn', !!warn);
+}
+function renderHen(){
+  const has = validHen(henData);
+  dJump.hidden = !has;
+  hudNext.classList.toggle('on', has);
+  if (!has) return;
+  askBox.hidden = true;
+  planBox.hidden = true;
+  planBox.classList.remove('in');
+  document.getElementById('cdDay').textContent = fmtHenDay(henData.date);
+  document.getElementById('cdTime').textContent = henData.time || '';
+  const msgEl = document.getElementById('cdMsg');
+  msgEl.textContent = henData.msg ? '\u201C' + henData.msg + '\u201D' : '';
+  msgEl.hidden = !henData.msg;
+  document.getElementById('hudNextV').textContent =
+    henData.date.slice(8) + '.' + henData.date.slice(5, 7) + (henData.time ? ' · ' + henData.time : '');
+  document.getElementById('askEyebrow').textContent = 'Đã chốt · chờ tới ngày';
+  revealEl(henCard);
+  tickHen();
+}
+setInterval(tickHen, 1000);
+
+/* ---------- nút KHÔNG: không bao giờ bấm được ----------
+   Chặn ở CẢ pointerdown lẫn click, vì trên điện thoại pointerdown chạy trước —
+   chỉ chặn click thôi thì ngón tay vẫn "chạm trúng" được một nhịp. */
+let fledCount = 0;
+const lastPtr = { x: innerWidth / 2, y: innerHeight / 2 };
+
+function lewlew(x, y){
+  const el = document.createElement('div');
+  el.className = 'lewlew';
+  el.textContent = 'lewlew';
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.fontSize = (21 + Math.random() * 15).toFixed(0) + 'px';
+  el.style.setProperty('--rot', (Math.random() * 26 - 13).toFixed(1) + 'deg');
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1400);
+}
+
+function flee(){
+  if (btnNo.classList.contains('gone')) return;
+  const r = btnNo.getBoundingClientRect();
+  lewlew(r.left + r.width / 2, r.top + r.height / 2);
+
+  if (!btnNo.classList.contains('loose')){
+    btnNo.style.width = r.width + 'px';
+    btnNo.style.height = r.height + 'px';
+    btnNo.classList.add('loose');
+  }
+  fledCount++;
+  if (fledCount >= 8){
+    btnNo.classList.add('gone');
+    askNote.classList.add('on');
+    return;
+  }
+  const M = 12, w = r.width, h = r.height;
+  const maxX = Math.max(M, innerWidth - w - M), maxY = Math.max(M, innerHeight - h - M);
+  let bx = M, by = M, bd = -1;
+  for (let i = 0; i < 28; i++){                     /* thử 28 chỗ, lấy chỗ xa tay nhất */
+    const x = M + Math.random() * (maxX - M);
+    const y = M + Math.random() * (maxY - M);
+    const dx = x + w / 2 - lastPtr.x, dy = y + h / 2 - lastPtr.y;
+    const d = dx * dx + dy * dy;
+    if (d > bd){ bd = d; bx = x; by = y; }
+  }
+  btnNo.style.left = bx + 'px';
+  btnNo.style.top = by + 'px';
+  btnNo.style.transform = 'rotate(' + (Math.random() * 16 - 8).toFixed(1) + 'deg) scale(' +
+                          Math.max(0.62, 1 - fledCount * 0.05).toFixed(2) + ')';
+  noRect = null;
+}
+
+/* Không được hãm theo thời gian ở đây: một nhát rê chuột nhanh bắn ra cả chục
+   pointermove trong vài mili giây, sự kiện ĐẦU (con trỏ còn ở xa) sẽ ăn mất suất và
+   nuốt luôn sự kiện CUỐI đang nằm ngay trên nút -> con trỏ đậu lên mà nút đứng im.
+   Thay bằng nhớ sẵn khung của nút, chỉ đo lại khi nó thực sự có thể đã dịch. */
+let noRect = null;
+const dropNoRect = () => { noRect = null; };
+addEventListener('scroll', dropNoRect, { passive: true });
+addEventListener('resize', dropNoRect, { passive: true });
+
+addEventListener('pointermove', e => {
+  lastPtr.x = e.clientX; lastPtr.y = e.clientY;
+  if (btnNo.classList.contains('gone') || askBox.hidden) return;
+  if (!noRect) noRect = btnNo.getBoundingClientRect();
+  const dx = Math.max(noRect.left - e.clientX, 0, e.clientX - noRect.right);
+  const dy = Math.max(noRect.top - e.clientY, 0, e.clientY - noRect.bottom);
+  if (dx * dx + dy * dy < 8100) flee();              /* tới gần 90px là chạy */
+}, { passive: true });
+
+btnNo.addEventListener('pointerdown', e => { e.preventDefault(); flee(); });
+btnNo.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); flee(); });
+btnNo.addEventListener('focus', flee);
+addEventListener('resize', () => {                   /* xoay máy xong đừng để nó nằm ngoài màn */
+  if (!btnNo.classList.contains('loose')) return;
+  const r = btnNo.getBoundingClientRect();
+  btnNo.style.left = Math.min(parseFloat(btnNo.style.left) || 0, Math.max(12, innerWidth - r.width - 12)) + 'px';
+  btnNo.style.top = Math.min(parseFloat(btnNo.style.top) || 0, Math.max(12, innerHeight - r.height - 12)) + 'px';
+}, { passive: true });
+
+/* ---------- nút CÓ ---------- */
+function nextSaturday(){
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7 || 7));
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+function openPlan(){
+  const now = new Date();
+  dDate.min = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  dDate.value = validHen(henData) ? henData.date : nextSaturday();
+  dTime.value = validHen(henData) && henData.time ? henData.time : '19:00';
+  dMsg.value = validHen(henData) ? (henData.msg || '') : '';
+  henCard.hidden = true;
+  henCard.classList.remove('in');
+  document.getElementById('askEyebrow').textContent = 'Đang chọn ngày · chưa lưu';
+  revealEl(planBox);
+}
+document.getElementById('btnYes').addEventListener('click', () => {
+  askRow.classList.add('done');
+  setTimeout(() => { askBox.hidden = true; }, 620);
+  openPlan();
+  if (starsAPI){ starsAPI.setForm(2); starsAPI.shock(); }
+});
+document.getElementById('dEdit').addEventListener('click', openPlan);
+dJump.addEventListener('click', () => {
+  document.getElementById('act-date').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+/* ---------- chốt lịch ---------- */
+async function saveHen(){
+  if (!dDate.value){ henNote('Em chọn ngày giúp anh với', true); return; }
+  const o = { date: dDate.value, time: dTime.value || '19:00',
+              msg: dMsg.value.trim().slice(0, 200), savedAt: Date.now() };
+  henData = o;
+  writeLocalHen(o);
+  renderHen();
+  if (starsAPI){
+    starsAPI.setForm(2);
+    starsAPI.shock();
+    starsAPI.glow(0.55);
+    setTimeout(() => { if (starsAPI) starsAPI.glow(0); }, 1800);
+  }
+  if (!SYNC_URL){
+    henNote('Đã lưu — bấm “Gửi cho anh” để báo cho anh biết');
+    return;
+  }
+  henNote('Đang gửi cho anh…');
+  const ok = await pushHen(o);
+  henNote(ok ? 'Đã gửi cho anh rồi ♥'
+             : 'Chưa gửi lên được — đã lưu trên máy, bấm “Gửi cho anh” nhé', !ok);
+}
+document.getElementById('dSave').addEventListener('click', saveHen);
+
+/* ---------- gửi tay qua link (đường lui khi không có máy chủ) ---------- */
+document.getElementById('dShare').addEventListener('click', async () => {
+  const url = location.href.split('#')[0] + '#hen=' + packHen(henData);
+  const text = 'Em chốt rồi nè: ' + fmtHenDay(henData.date) +
+               (henData.time ? ' lúc ' + henData.time : '') + '\n' + url;
+  if (navigator.share){
+    try { await navigator.share({ title: 'Hẹn tiếp theo', text: text }); return; } catch (e){}
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    henNote('Đã chép — dán vào Zalo gửi cho anh là xong');
+  } catch (e){
+    prompt('Chép dòng này gửi cho anh:', url);
+  }
+});
+
+/* ---------- nạp lúc mở trang ---------- */
+(function initHen(){
+  const m = location.hash.match(/hen=([A-Za-z0-9_-]+)/);
+  const fromLink = m ? unpackHen(m[1]) : null;
+  const fromLocal = readLocalHen();
+  henData = newerHen(fromLocal, fromLink);
+  if (validHen(henData)){
+    writeLocalHen(henData);
+    renderHen();
+  }
+  pullHen().then(srv => {
+    const best = newerHen(henData, srv);
+    if (best && best !== henData){ henData = best; writeLocalHen(best); renderHen(); }
+    else if (validHen(henData) && SYNC_URL && !srv) pushHen(henData);   /* máy chủ mới bật: đẩy lên */
+  });
 })();
 
 /* ============================ bầu trời sao ============================ */

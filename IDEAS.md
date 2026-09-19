@@ -28,11 +28,17 @@ File hiện bắt đầu thẳng bằng `<title>`, **không có `<!doctype html>
 3. **Nhịp khi đổi hình thái** (nhẹ) — `aSeed[2]` (trễ theo từng hạt) đã có sẵn trong dữ liệu nhưng nhịp morph hiện gần như đều: cho hạt sáng đi trước, hạt tối theo sau, dùng easing khác nhau cho mỗi cặp hình → đổi hình có hơi thở chứ không trượt phẳng.
 4. **Cuộn đậu đúng chương** (nhẹ) — `scroll-snap-type: y proximity` cho 3 section: cuộn tay trên điện thoại sẽ không dừng lưng chừng giữa 2 chương.
 
+## 2b. ✅ XONG 19.09.2026 — Chương “Lời mời hẹn buổi tiếp theo”
+
+Nút KHÔNG chạy trốn + chữ *lewlew*, bấm CÓ thì chọn ngày/giờ/lời nhắn, chốt xong hiện thẻ hẹn
+có đếm ngược, xem lại qua nút **Hẹn tiếp theo**. Còn lại: bật đồng bộ theo `SYNC.md` thì
+lời hẹn tự hiện trên máy anh, khỏi phải gửi tay.
+
 ## 3. Làm SÂU — phần lãng mạn (đây mới là thứ đáng đầu tư nhất)
 
 Trang hiện rất đẹp nhưng **đọc một lượt là hết**: 3 đoạn chữ, 1 cao trào. Ba ý dưới đây làm nó mở lại lần thứ mười vẫn còn cái để tìm.
 
-1. **⭐ Chòm sao kỷ niệm (ĐỀ XUẤT LÀM ĐẦU — vừa)**
+1. **⭐ Chòm sao kỷ niệm — 🕓 HOÃN (chốt 19.09.2026: mới đi chơi một buổi, chưa đủ kỷ niệm)**
    Rải 5–7 ngôi sao "có tên" nằm trên khuôn mặt, sáng hơn và nhấp nháy chậm hơn chung quanh. Chạm vào một ngôi → nét chòm sao quanh nó tự vẽ ra, một tấm ảnh nhỏ mờ dần hiện lên kèm **một câu duy nhất** về kỷ niệm đó (lần đầu nhắn tin, món ăn chung đầu tiên, câu nói em hay nói...). Chạm ra ngoài thì nó tan về lại thành sao.
    *Vì sao đáng làm*: biến trang từ "một lá thư" thành "một bầu trời để đi dạo". Tận dụng đúng thứ đã dựng sẵn (hạt, nét nối, sóng xung kích) nên không phải viết engine mới.
 

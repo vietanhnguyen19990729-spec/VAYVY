@@ -4,9 +4,9 @@
 
 ## Tóm tắt nhanh
 
-- **Đang ở đâu**: bản v1 CHẠY ĐƯỢC, đã vá phần meta nên điện thoại giờ hiển thị đúng. Toàn bộ trang nằm trong 1 file HTML duy nhất, đã có git.
-- **Tiếp theo (ưu tiên)**: 1) **test thật trên điện thoại** (bản vá viewport chưa được kiểm trên máy thật) · 2) cất ảnh/nhạc gốc + viết `build.js` · 3) gỡ phụ thuộc mạng (three.js, Google Fonts) · 4) chòm sao kỷ niệm — xem `IDEAS.md` §3.1.
-- **Rủi ro lớn nhất**: KHÔNG còn ảnh gốc / nhạc gốc / script sinh bản đồ sao → hiện tại không tái tạo lại `index.html` được nếu muốn đổi ảnh.
+- **Đang ở đâu**: v2 — đã có chương **Lời mời hẹn buổi tiếp theo**. Có git, có `build.js`, asset gốc đã cứu lại.
+- **Tiếp theo (ưu tiên)**: 1) **test thật trên điện thoại** · 2) bật đồng bộ Firebase theo `SYNC.md` (cần anh bấm vài cái trong tài khoản Google) · 3) gỡ phụ thuộc mạng (three.js, Google Fonts).
+- **Rủi ro lớn nhất**: trang hiện **chết hoàn toàn nếu không có Internet** — `import * as THREE from 'three'` lấy từ CDN, import hỏng là cả file JS không chạy, mất luôn cả chương lời mời.
 
 ## Cấu trúc thư mục
 
@@ -16,6 +16,9 @@
 | `index.html` | Bản đã nhúng asset (6,7 MB) — **FILE KẾT QUẢ, không sửa tay**, luôn sửa `_template.html` rồi build lại |
 | `PROGRESS.md` | File này |
 | `IDEAS.md` | Kế hoạch / ý tưởng làm tiếp |
+| `SYNC.md` | Hướng dẫn bật đồng bộ Firebase (chưa làm) |
+| `build.js` | `node build.js` — ghép template + assets ra `index.html` |
+| `assets/` | Ảnh, nhạc, bản đồ sao gốc — nguồn của `build.js` |
 | `.gitattributes` | `* -text` — cấm git đổi byte file base64 6,7 MB |
 
 ## Đã làm được gì (v1)
@@ -36,6 +39,16 @@
 - Kịch bản có nhịp: build 1.0s → surge 2.15s → burst 3.0s → chữ hiện 4.45s → lắng, tổng ~14.6s; tự dọn rAF/listener khi hết.
 - Âm thanh chuông/riser/shimmer tổng hợp bằng oscillator (không dùng file), nhạc nền nhúng sẵn, có gợi ý "chạm để mở nhạc" khi trình duyệt chặn autoplay.
 
+**Chương 4 · Lời mời hẹn buổi tiếp theo** (v2)
+- Hỏi “Buổi tiếp theo, em nhé?” với 2 nút. Nút **KHÔNG** rê tới gần 90px là nhảy đi chỗ khác
+  (chọn trong 28 điểm ngẫu nhiên lấy chỗ xa tay nhất), mỗi lần bung ra chữ *lewlew*, nhỏ dần;
+  chạy đủ 8 lần thì biến mất hẳn. Chặn ở cả `pointerdown` lẫn `click` nên **không cách nào bấm được**.
+- Bấm **CÓ** → hiện ô chọn ngày (điền sẵn thứ 7 tới) + giờ (19:00) + ô lời nhắn không bắt buộc.
+  Chốt xong: bầu sao morph sang Trái tim + sóng xung kích, hiện thẻ hẹn có đếm ngược.
+- Chỗ xem lại: nút **Hẹn tiếp theo** ở thanh điều khiển + một dòng trên HUD góc phải.
+- Lưu 3 tầng, cái nào mới hơn (`savedAt`) thì thắng: link chia sẻ `#hen=` · `localStorage` · máy chủ.
+  Máy chủ CHƯA bật (`SYNC_URL` để trống) — xem `SYNC.md`. Mọi bước mạng đều fail-soft.
+
 **Đã lo sẵn**
 - `prefers-reduced-motion`, responsive khổ dọc (860px/620px), `bail()` rơi về ảnh tĩnh nếu WebGL lỗi, núm chỉnh sáng `window.vyaTune(gain, str, thr, size)` trong console.
 
@@ -49,6 +62,20 @@
 6. **Chưa test thật trên máy điện thoại của Vy** — việc cần làm ngay sau bản vá viewport.
 
 ## Nhật ký
+
+### 2026-09-19 — Chương lời mời + build.js
+- **`build.js`**: tách ngược base64 trong `index.html` ra `assets/` (ảnh 478x760, nhạc 4 MB,
+  bản đồ sao 113.180 ngôi). Kiểm: build lại ra file **giống hệt từng byte**. Từ giờ chỉ sửa
+  `_template.html` rồi `node build.js`.
+  *Lưu ý*: `assets/portrait.jpg` chỉ là **ảnh dự phòng** (tỉ lệ 0,629), còn bản đồ sao dựng từ
+  một khung cắt khác (tỉ lệ 0,781) — ảnh gốc của bản đồ sao vẫn chưa tìm lại được.
+- Thêm chương 4 **Lời mời** (xem mục trên). Đã lái Chrome thật kiểm 28 điểm, đạt cả 28,
+  cả khổ 1280px lẫn 420px, không lỗi console.
+- **Bug thật đã sửa trong lúc làm**: hãm sự kiện `pointermove` theo thời gian (60ms) khiến một
+  nhát rê chuột nhanh bị nuốt mất sự kiện CUỐI — con trỏ đậu ngay trên nút KHÔNG mà nút đứng im,
+  phải rung chuột mới chạy. Thay bằng nhớ sẵn khung của nút, chỉ đo lại khi nó có thể đã dịch.
+- **Hoãn**: “Chòm sao kỷ niệm” — mới đi chơi một buổi, chưa đủ kỷ niệm để rải sao. Giữ nguyên ý
+  tưởng trong `IDEAS.md` §3.1, làm sau.
 
 ### 2026-09-19 — Vá meta cho điện thoại + dựng git
 - `git init`, 2 commit: `v1` (bản gốc) → bản vá. Kèm `.gitattributes` `* -text` để git không đụng byte file base64.
