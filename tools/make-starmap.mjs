@@ -19,14 +19,21 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { relight } from './relight.mjs';
 
 const DIR = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const A = f => path.join(DIR, 'assets', f);
 
 /* ======================= NÚM CHỈNH ======================= */
 const T = {
+  /* --- làm mịn giữ nét (lọc song phương) --- */
+  smIter:     1,      // số lượt. 0 = tắt
+  smR:        3,      // bán kính px
+  smRange: 0.085,     // KHÁC BIỆT SÁNG bao nhiêu thì coi là NÉT và không làm mịn.
+                      // Cao quá -> mờ hết mắt/kính/môi; thấp quá -> da vẫn lấm tấm
+
   /* --- dựng tông --- */
-  sharpAmt:   0.40,   // độ nổi nét cục bộ (mắt/kính/môi). Cao quá -> VIỀN SÁNG quanh mặt
+  sharpAmt:   0.55,   // độ nổi nét cục bộ (mắt/kính/môi). Cao quá -> VIỀN SÁNG quanh mặt
   sharpSig:  11.0,    // bán kính so sánh sáng-tối cục bộ
   loPct:      0.02,   // cắt đuôi tối
   hiPct:      0.995,  // cắt đuôi sáng
@@ -40,14 +47,21 @@ const T = {
   hairHi:     0.15,
 
   /* --- rải hạt --- */
-  nSkin:      98000,  // NHIỀU hạt NHỎ, không phải ít hạt to: đó là chỗ khác nhau giữa
+  nSkin:      56000,  // NHIỀU hạt NHỎ, không phải ít hạt to: đó là chỗ khác nhau giữa
                       // "vẽ bằng điểm" và "rắc nhiễu" — trán sẽ có chuyển sắc thay vì bệt trắng
-  nHair:      32000,
-  nMass:      4000,
+  nNet:       22000,  // lớp NÉT riêng: mắt, mi, gọng kính, viền môi, sống mũi
+  netPow:     1.30,   // mũ mật độ theo độ lớn nét
+  netLo:      0.07,   // sàn độ sáng hạt nét — PHẢI thấp, xem ghi chú ở mục 9a
+  netGamma:   1.60,
+  nHair:      30000,
+  nMass:      3400,
   nDust:      4000,
-  toneGamma:  1.45,   // mật độ theo tông. Cao -> vùng tối rỗng hơn, nền sạch hơn
-  toneFloor:  0.020,  // vẫn còn chút sao chỗ tối nhất, không thì thành lỗ thủng
-  detailAmt:  1.15,   // chỗ nhiều nét rải dày hơn -> nét mảnh không bị mất
+  /* Để ~1: độ sáng nhìn thấy TỈ LỆ THẲNG với bản đồ tông, nên bức render ra đúng
+     bằng bản đồ tông — chỉnh nghệ thuật ở đâu là NHÌN THẤY ở đó, không phải đoán
+     qua lớp hạt. Đẩy lên 1,5 là toàn bộ vùng trung gian tối sầm và mặt bị bẹt. */
+  toneGamma:  1.06,
+  toneFloor:  0.010,  // vẫn còn chút sao chỗ tối nhất, không thì thành lỗ thủng
+  detailAmt:  0.35,   // chỗ nhiều nét rải dày hơn -> nét mảnh không bị mất
   hairDamp:   0.62,   // giảm hạt "da" trong vùng tóc, nhường chỗ cho sợi
 
   /* --- sợi tóc --- */
@@ -65,11 +79,27 @@ const T = {
   fadeKeep:   0.10,   // còn lại bao nhiêu ngay sát rìa
   dustBand:   18,     // bụi bay ra ngoài mặt nạ bao xa
 
+  /* --- đèn viền (lớp hạt riêng chạy quanh bóng người) --- */
+  nEye:       1100,   // đốm bắt sáng trong con ngươi / trên môi / ánh gọng kính
+  eyeSize:    0.30,
+  nRim:       5200,   // đường viền sáng: ít hạt, rất sáng, rất nhỏ
+  rimSharp:   1.05,   // mũ mật độ: cao -> viền mảnh lại
+  rimBr:      0.92,
+  rimSize:    0.34,   // hạt viền nhỏ nhất bảng, để đường viền đanh chứ không nhoè
+
   /* --- độ sáng & cỡ hạt --- */
-  brGamma:    1.45,
-  brLo:       0.045,
-  sizeBase:   0.90,
-  sizeTone:   0.50,   // sáng thì hạt NHỎ lại, tối thì to hơn chút
+  /* Stipple thật thì MỌI HẠT GẦN NHƯ BẰNG NHAU, sáng tối do KHOẢNG CÁCH giữa các
+     hạt quyết định. Cho độ sáng từng hạt chạy theo tông NỮA là tính hai lần: vùng
+     giữa vừa thưa vừa mờ, chồng lên nhau ngẫu nhiên, ra đúng cái cảm giác "ảnh bị
+     rắc nhiễu" phải tránh. Nên để dải này HẸP. */
+  brGamma:    0.90,
+  brLo:       0.45,
+  /* Cỡ hạt so với KHOẢNG CÁCH giữa các hạt là thứ quyết định "vẽ bằng điểm" hay
+     "một mảng sáng". Để hạt to hơn khoảng cách là vùng sáng dính liền thành mảng
+     trắng và nuốt luôn con mắt — nhìn ảnh render tưởng lỗi thuật toán, thật ra chỉ
+     là hạt quá khổ. Nhiều hạt NHỎ luôn đẹp hơn ít hạt to. */
+  sizeBase:   0.46,
+  sizeTone:   0.08,   // sáng thì hạt NHỎ lại, tối thì to hơn chút
 };
 /* ========================================================= */
 
@@ -136,9 +166,43 @@ for (let i = 0; i < NP; i++){
   L[i] = (0.2126 * rgba[o] + 0.7152 * rgba[o + 1] + 0.0722 * rgba[o + 2]) / 255;
 }
 
+/* ---------- 1b. làm mịn GIỮ NÉT ----------
+   Ảnh gốc là ảnh chụp điện thoại: da có nhiễu cảm biến + vệt nén JPEG. Bước nổi nét
+   ở dưới khuếch đại đúng thứ nhiễu đó lên, rồi bước kéo tương phản khuếch đại tiếp
+   -> cả khuôn mặt lấm tấm như bị rắc cát, đúng cái "grainy" phải tránh.
+   Lọc song phương: lấy trung bình các điểm xung quanh NHƯNG chỉ tính những điểm có
+   độ sáng gần giống nó. Da mịn đi, còn gọng kính / mi mắt / viền môi thì khác biệt
+   sáng quá lớn nên không bị trộn — nét vẫn đanh nguyên. */
+function bilateral(src, r, sr){
+  const d = new Float32Array(NP);
+  const gs = [];
+  for (let k = -r; k <= r; k++) gs.push(Math.exp(-(k * k) / (2 * (r * 0.6) * (r * 0.6))));
+  const inv2 = 1 / (2 * sr * sr);
+  for (let y = 0; y < H; y++){
+    for (let x = 0; x < W; x++){
+      const i = y * W + x, c0 = src[i];
+      let sum = 0, wsum = 0;
+      for (let dy = -r; dy <= r; dy++){
+        const yy = y + dy; if (yy < 0 || yy >= H) continue;
+        const row = yy * W, wy = gs[dy + r];
+        for (let dx = -r; dx <= r; dx++){
+          const xx = x + dx; if (xx < 0 || xx >= W) continue;
+          const v = src[row + xx], dv = v - c0;
+          const w = wy * gs[dx + r] * Math.exp(-dv * dv * inv2);
+          sum += v * w; wsum += w;
+        }
+      }
+      d[i] = wsum > 0 ? sum / wsum : c0;
+    }
+  }
+  return d;
+}
+let Lf = L;
+for (let k = 0; k < T.smIter; k++) Lf = bilateral(Lf, T.smR, T.smRange);
+
 /* ---------- 2. nổi nét cục bộ + kéo tương phản ---------- */
-const Lsm  = blur(L, 1.0);
-const Lbig = blur(L, T.sharpSig);
+const Lsm  = blur(Lf, 0.8);
+const Lbig = blur(Lf, T.sharpSig);
 const Lc = new Float32Array(NP);
 for (let i = 0; i < NP; i++) Lc[i] = clamp01(Lsm[i] + T.sharpAmt * (Lsm[i] - Lbig[i]));
 
@@ -225,6 +289,13 @@ const fade = new Float32Array(NP);
 for (let i = 0; i < NP; i++)
   fade[i] = mask[i] ? T.fadeKeep + (1 - T.fadeKeep) * smooth(0, T.fadeBand, dist[i]) : 0;
 
+/* ---------- 6b. THẮP ĐÈN LẠI ----------
+   Tới đây mới có đủ nguyên liệu (tông, tóc, nét, khoảng cách tới rìa) để dựng khối
+   và chiếu đèn. Từ điểm này trở đi mọi thứ dùng `TONE` (đã thắp đèn), KHÔNG dùng
+   `tone` (sáng tối bê nguyên từ ảnh chụp) nữa. Núm chỉnh đèn nằm trong relight.mjs. */
+const R = relight({ W, H, mask, tone, hair, det, dist, blur, L });
+const TONE = R.tone2, depth = R.depth;
+
 /* ---------- 7. rải điểm bằng khuếch tán sai số ----------
    Quét kiểu rắn bò + rung ngưỡng: khoảng cách giữa các hạt rất đều (gần nhiễu xanh),
    khác hẳn random thuần vốn hay vón cục chỗ này, thủng chỗ kia.
@@ -257,7 +328,7 @@ function diffuse(field, total, seed, ss){
       const x = rev ? GW - 1 - n : n, i = y * GW + x;
       const v = grid[i] * k + err[i];
       let e;
-      if (v > 0.5 + (r() - 0.5) * 0.45){
+      if (v > 0.5 + (r() - 0.5) * 0.28){
         pts.push(((x + 0.5) * inv - 0.5) + (r() * 0.9 - 0.45) * inv,
                  ((y + 0.5) * inv - 0.5) + (r() * 0.9 - 0.45) * inv);
         e = v - 1;
@@ -280,9 +351,12 @@ function diffuse(field, total, seed, ss){
 const dSkin = new Float32Array(NP), dSeed = new Float32Array(NP), dMass = new Float32Array(NP);
 for (let i = 0; i < NP; i++){
   if (!mask[i]) continue;
-  const t = tone[i];
+  const t = TONE[i];
   const base = T.toneFloor + Math.pow(t, T.toneGamma);
-  dSkin[i] = base * (1 + T.detailAmt * det[i]) * (1 - T.hairDamp * hair[i]) * fade[i];
+  /* Tăng mật độ ở chỗ nhiều nét, NHƯNG phải nhân thêm chính độ sáng t: nếu không,
+     lông mi, con ngươi, gọng kính (tối mà nhiều nét) bị nhồi thêm hạt -> mắt sáng
+     bằng trán, mất sạch. Nét tối phải hiện ra bằng chỗ VẮNG hạt, không phải thêm hạt. */
+  dSkin[i] = base * (1 + T.detailAmt * det[i] * t) * (1 - T.hairDamp * hair[i]) * fade[i];
   dMass[i] = hair[i] * (T.hairLift + 0.82 * t) * fade[i];
   /* mầm sợi: gieo ở chỗ tóc có ánh — sợi sẽ chạy từ đó ra */
   dSeed[i] = hair[i] * (0.10 + Math.pow(t, 0.75)) * fade[i] * smooth(T.flowCoh, T.flowCoh + 0.22, coh[i]);
@@ -296,16 +370,30 @@ const push = (px, py, br, lu, sz, cl) => {
 const sizeOf = t => T.sizeBase - T.sizeTone * t;
 const brOf   = t => T.brLo + (1 - T.brLo) * Math.pow(t, T.brGamma);
 
-/* 9a. da + nét */
+/* 9a. DA — hạt gần như bằng nhau, tông hoàn toàn do khoảng cách giữa các hạt */
 {
   const p = diffuse(dSkin, T.nSkin, 7717, 2);
   for (let i = 0; i < p.length; i += 2){
-    const x = p[i], y = p[i + 1];
-    const t = at(tone, x, y), d = at(det, x, y);
-    const isNet = d > 0.30;
-    /* hạt chỗ nhiều nét thì nhỏ và đanh hơn -> mắt, gọng kính, viền môi rõ ra */
-    push(x, y, brOf(t) * (1 + 0.28 * d), at(L, x, y),
-         sizeOf(t) * (isNet ? 0.74 : 1.0), isNet ? 2 : 0);
+    const x = p[i], y = p[i + 1], t = at(TONE, x, y);
+    push(x, y, brOf(t), at(depth, x, y), sizeOf(t), 0);
+  }
+}
+/* 9a-bis. NÉT — mắt, mi, gọng kính, viền môi.
+   Lớp này có LUẬT ĐỘ SÁNG RIÊNG, và đó là cả vấn đề. Hạt da cố ý gần như bằng nhau
+   (tông do mật độ). Nhưng nếu hạt nét cũng sáng đều như vậy thì con ngươi, hàng mi,
+   gọng kính — vốn TỐI mà lại rất nhiều nét — bị nhồi hạt sáng vào, và đôi mắt sáng
+   ngang cái trán: nhìn render tưởng mất mắt.
+   Nên: mật độ theo ĐỘ LỚN NÉT (đủ chi tiết), còn độ sáng theo TÔNG và dốc (tối thì
+   phải tối). Kết quả là mắt vừa đủ chi tiết vừa vẫn là một vùng tối. */
+{
+  const dNet = new Float32Array(NP);
+  for (let i = 0; i < NP; i++)
+    dNet[i] = mask[i] ? Math.pow(det[i], T.netPow) * (1 - 0.85 * hair[i]) * fade[i] : 0;
+  const p = diffuse(dNet, T.nNet, 2609, 2);
+  for (let i = 0; i < p.length; i += 2){
+    const x = p[i], y = p[i + 1], t = at(TONE, x, y);
+    push(x, y, T.netLo + (1 - T.netLo) * Math.pow(t, T.netGamma),
+         at(depth, x, y), sizeOf(t) * 0.70, 2);
   }
 }
 /* 9b. sợi tóc — đi theo trường tiếp tuyến */
@@ -313,7 +401,7 @@ const brOf   = t => T.brLo + (1 - T.brLo) * Math.pow(t, T.brGamma);
   const seeds = diffuse(dSeed, Math.round(T.nHair / T.strandLen), 3391);
   for (let s = 0; s < seeds.length; s += 2){
     let x = seeds[s], y = seeds[s + 1];
-    const t0 = at(tone, x, y);
+    const t0 = at(TONE, x, y);
     /* chỉ MỘT VÀI sợi bắt được ánh sáng, phần còn lại chìm hẳn vào khối tối —
        cho đều tay thì tóc lại thành một mảng xám nhiễu, đúng cái phải tránh */
     const shine = 0.30 + 1.25 * Math.pow(rnd(), T.strandShine);
@@ -325,10 +413,10 @@ const brOf   = t => T.brLo + (1 - T.brLo) * Math.pow(t, T.brGamma);
       if (x < 0 || y < 0 || x >= W - 1 || y >= H - 1) break;
       if (at(hair, x, y) < 0.12 && k > 2) break;
       const taper = Math.min(1, k / 3) * smooth(0, 0.34, 1 - k / len);
-      const t = at(tone, x, y);
+      const t = at(TONE, x, y);
       const br = clamp01((brOf(t) + T.hairLift) * T.strandDim * shine
                          * (1 + T.strandGlow * t0) * taper * at(fade, x, y));
-      if (br > 0.012) push(x, y, br, at(L, x, y), sizeOf(t) * 0.80, 1);
+      if (br > 0.012) push(x, y, br, at(depth, x, y), sizeOf(t) * 0.80, 1);
       let nx = at(tanX, x, y), ny = at(tanY, x, y);
       if (nx * dirX + ny * dirY < 0){ nx = -nx; ny = -ny; }
       dirX = dirX * 0.35 + nx * 0.65; dirY = dirY * 0.35 + ny * 0.65;
@@ -343,19 +431,19 @@ const brOf   = t => T.brLo + (1 - T.brLo) * Math.pow(t, T.brGamma);
 {
   const p = diffuse(dMass, T.nMass, 5519, 2);
   for (let i = 0; i < p.length; i += 2){
-    const x = p[i], y = p[i + 1], t = at(tone, x, y);
-    push(x, y, (brOf(t) + T.hairLift) * 0.62, at(L, x, y), sizeOf(t) * 0.98, 1);
+    const x = p[i], y = p[i + 1], t = at(TONE, x, y);
+    push(x, y, (brOf(t) + T.hairLift) * 0.62, at(depth, x, y), sizeOf(t) * 0.98, 1);
   }
 }
 /* 9d. bụi rìa: bay ra ngoài mặt nạ, mờ dần — bóng người không có viền cứng */
 {
   const dEdge = new Float32Array(NP);
   for (let i = 0; i < NP; i++)
-    dEdge[i] = mask[i] ? smooth(T.fadeBand * 1.6, 1, dist[i]) * (0.25 + 0.75 * tone[i]) : 0;
+    dEdge[i] = mask[i] ? smooth(T.fadeBand * 1.6, 1, dist[i]) * (0.25 + 0.75 * TONE[i]) : 0;
   const p = diffuse(dEdge, T.nDust, 9181, 2);
   for (let i = 0; i < p.length; i += 2){
     const x = p[i], y = p[i + 1];
-    const t = at(tone, x, y);
+    const t = at(TONE, x, y);
     /* đẩy ra phía ngoài, ngược hướng tăng của khoảng-cách-tới-rìa */
     const s = 2;
     const ox = at(dist, x + s, y) - at(dist, x - s, y);
@@ -365,8 +453,35 @@ const brOf   = t => T.brLo + (1 - T.brLo) * Math.pow(t, T.brGamma);
     const fx = x - ox / nn * away + (rnd() - 0.5) * 5;
     const fy = y - oy / nn * away + (rnd() - 0.5) * 5;
     const dim = Math.pow(1 - away / T.dustBand, 1.6);
-    push(fx, fy, clamp01(brOf(t) * 0.55 * dim + 0.02), at(L, x, y),
+    push(fx, fy, clamp01(brOf(t) * 0.55 * dim + 0.02), at(depth, x, y),
          sizeOf(t) * (1.15 + rnd() * 0.5), 3);
+  }
+}
+
+/* 9d-bis. ĐỐM BẮT SÁNG — vài chục hạt thôi, nhưng là mấy hạt quan trọng nhất cả bức:
+   hai đốm trong con ngươi làm khuôn mặt nhìn lại người xem. Sáng hết cỡ, nhỏ hết cỡ,
+   để bloom bắt được thành một tia lấp lánh. */
+{
+  const dEye = new Float32Array(NP);
+  for (let i = 0; i < NP; i++) dEye[i] = mask[i] ? Math.pow(R.eye[i], 1.6) * fade[i] : 0;
+  const p = diffuse(dEye, T.nEye, 8123, 3);
+  for (let i = 0; i < p.length; i += 2)
+    push(p[i], p[i + 1], 1.0, at(depth, p[i], p[i + 1]), T.eyeSize, 2);
+}
+
+/* 9e. ĐÈN VIỀN — một đường sáng mảnh ôm quanh tóc và bờ vai.
+   Ảnh gốc không có thứ này. Nó là chi tiết làm bức chân dung tách hẳn khỏi nền và
+   trông như được chụp trong phòng studio chứ không phải chụp vội trước bức tường. */
+{
+  const dRim = new Float32Array(NP);
+  for (let i = 0; i < NP; i++)
+    dRim[i] = mask[i] ? Math.pow(R.rim[i], T.rimSharp) * fade[i] : 0;
+  const p = diffuse(dRim, T.nRim, 4271, 2);
+  for (let i = 0; i < p.length; i += 2){
+    const x = p[i], y = p[i + 1];
+    const rv = at(R.rim, x, y), t = at(TONE, x, y);
+    push(x, y, clamp01(T.rimBr * Math.pow(rv, 0.70) + brOf(t) * 0.30),
+         at(depth, x, y), T.rimSize * (0.85 + rnd() * 0.35), 2);
   }
 }
 
@@ -413,8 +528,10 @@ if (process.env.DUMP){
     for (let i = 0; i < NP; i += CH) s += String.fromCharCode.apply(null, u.subarray(i, i + CH));
     return Buffer.from(s, 'binary').toString('base64'); };
   fs.writeFileSync(path.join(DIR, 'tools', 'cache', 'fields.json'), JSON.stringify({
-    W, H, f: { tone: enc(tone), hair: enc(hair), det: enc(det), coh: enc(coh),
-               dSkin: enc(dSkin), dMass: enc(dMass), dSeed: enc(dSeed) } }));
+    W, H, f: { '1 tone goc': enc(tone), '2 khoi': enc(R.height),
+               '3 ban do sang': enc(R.shade), '4 den vien': enc(R.rim),
+               '5 TONE thap den': enc(TONE), '6 do sau': enc(depth),
+               '7 dom bat sang': enc(R.eye), '8 net': enc(det) } }));
   console.log('da do truong -> tools/cache/fields.json');
 }
 

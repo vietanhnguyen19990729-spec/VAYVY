@@ -1713,8 +1713,17 @@ function buildLinks(pos, tone, N, W, H, maxSeg){
   const fill = counts.slice(0, gw * gh);
   for (let i = 0; i < N; i++) items[fill[cellOf(i)]++] = i;
 
-  /* chỉ nối những ngôi đủ sáng -> mạng lưới bám theo nét mặt, không bám vào bụi */
-  const MIN_TONE = 0.42;
+  /* Chỉ nối những ngôi SÁNG NHẤT -> mạng lưới bám theo nét mặt, không bám vào bụi.
+     Ngưỡng tự suy ra theo phân vị chứ KHÔNG để số cứng: luật độ sáng của bộ sinh bản
+     đồ sao đổi một cái là số cứng hết lọc được gì, cả khuôn mặt biến thành một tấm
+     lưới trắng (đúng lỗi đã gặp khi chuyển sang hạt sáng đều nhau). */
+  let MIN_TONE;
+  {
+    const smp = [];
+    for (let i = 0; i < N; i += 11) smp.push(tone[i]);
+    smp.sort((a, b) => a - b);
+    MIN_TONE = smp[Math.min(smp.length - 1, (smp.length * 0.90) | 0)];
+  }
   const stride = Math.max(1, Math.floor(N / (maxSeg * 1.9)));
   const P = [], M = [], R = [];
   const lo = 0.013 * 0.013, hi = 0.032 * 0.032;
@@ -1840,14 +1849,17 @@ async function boot(){
     const px = smap.view.getInt16(o, true) / 10000;
     const py = smap.view.getInt16(o + 2, true) / 10000;
     const br = smap.u8[o + 4] / 255;   // độ sáng ngôi sao
-    const lu = smap.u8[o + 5] / 255;   // độ xám gốc -> phù điêu rất nhẹ
+    const dep = smap.u8[o + 5] / 255;  // ĐỘ SÂU do bộ sinh tính sẵn (khối đầu)
     const psz = smap.u8[o + 6] / 255 * 2.5;  // cỡ hạt đã tính sẵn theo vùng sáng/tối
     const pcl = smap.u8[o + 7];              // 0 da · 1 tóc · 2 nét · 3 bụi
 
     /* chân dung */
     aPortrait[k]     = px * W * 0.5;
     aPortrait[k + 1] = py * H * 0.5;
-    aPortrait[k + 2] = (lu - 0.40) * 0.12 + (Math.random() - 0.5) * 0.012;
+    /* Khối thật, không phải phù điêu theo độ xám. Bộ sinh dựng một cái vòm cho cả
+       đầu rồi cộng phù điêu gò má/cằm, nên khi máy quay trôi nhẹ thì khuôn mặt có
+       chiều sâu chứ không phải một tấm bìa dán hạt. */
+    aPortrait[k + 2] = (dep - 0.42) * 0.34 + (Math.random() - 0.5) * 0.010;
 
     /* điểm xuất phát: rải khắp bầu trời sâu, để lúc mở trang cả trời tụ lại thành em */
     const sa = Math.random() * Math.PI * 2;
@@ -2008,7 +2020,7 @@ async function boot(){
     uShock:  { value: new THREE.Vector3(0, 0, -1) },
     uAudio:  { value: 0 },
     uGlow:   { value: 0 },
-    uPGain:  { value: 1.26 },
+    uPGain:  { value: 2.05 },
     uSize:   { value: 7 },
     uDpr:    { value: DPR },
     uReveal: { value: 0 },
@@ -2017,6 +2029,11 @@ async function boot(){
     uTextS:  { value: 1 },
     uTextX:  { value: 0 },
     uStar:   { value: new THREE.Vector3(0.86, 0.92, 1.00) },
+    /* Hai đầu nhiệt độ màu của riêng CHÂN DUNG. Hoạ sĩ nào cũng làm việc này: ánh
+       sáng ngả ấm thì bóng tối phải ngả lạnh. Cho cả khuôn mặt cùng một sắc trắng
+       là ra ảnh chụp đen trắng tô màu, không phải tranh. */
+    uPCool:  { value: new THREE.Vector3(0.56, 0.71, 1.00) },
+    uPWarm:  { value: new THREE.Vector3(1.00, 0.96, 0.90) },
     uWarm:   { value: new THREE.Vector3(1.00, 0.88, 0.74) },
     uTintG:  { value: new THREE.Vector3(0.70, 0.84, 1.00) },
     uTintH:  { value: new THREE.Vector3(1.00, 0.56, 0.64) },
@@ -2066,7 +2083,7 @@ async function boot(){
       'uniform vec4 uWA, uWB;',
       'uniform vec2 uCursor;',
       'uniform vec3 uTrail[3];',
-      'uniform vec3 uShock, uStar, uWarm, uTintG, uTintH, uTintT;',
+      'uniform vec3 uShock, uStar, uWarm, uTintG, uTintH, uTintT, uPCool, uPWarm;',
       'uniform float uHc;',
       'attribute vec3 aGalaxy, aHeart, aText, aScatter;',
       'attribute vec4 aSeed;',
@@ -2110,12 +2127,14 @@ async function boot(){
       /* Chân dung giờ sáng gấp mấy lần trước, nên cú chạm/rê tay phải nhẹ tay hẳn:
          để nguyên độ bùng cũ là cả khuôn mặt loé trắng, mất sạch nét. Thiên hà và
          trái tim vẫn giữ nguyên độ bùng — ở đó loé lên mới đã. */
-      '  hot *= mix(1.0, 0.25, w.x);',
+      '  hot *= mix(1.0, 0.10, w.x);',
       /* ánh sao đơn sắc; một số ít ngôi ngả ấm cho trời có nhiệt độ màu như thật */
       /* vài ngôi ngả ấm cho trời có nhiệt độ màu thật — nhưng KHÔNG được rơi vào
          khuôn mặt: chân dung phải giữ đúng một sắc trắng lạnh, lốm đốm vàng là hỏng */
       '  float warm = step(0.90, fract(aSeed.y * 7.13));',
       '  vec3 sky = mix(uStar, uWarm, warm * 0.8 * (1.0 - 0.92 * w.x));',
+      /* trong vùng chân dung: tối -> xanh sâu, sáng -> trắng ngả ấm */
+      '  sky = mix(sky, mix(uPCool, uPWarm, smoothstep(0.52, 0.97, aTone)), w.x);',
       '  float other = clamp(w.y + w.z + w.w, 0.0, 1.0);',
       '  vec3 tint = (uTintG * w.y + uTintH * w.z + uTintT * w.w) / max(other, 0.0001);',
       /* vài ngôi ngả vàng ấm cho trái tim/thiên hà có chiều sâu màu, không bệt một sắc hồng */

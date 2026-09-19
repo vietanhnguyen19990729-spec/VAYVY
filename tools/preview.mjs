@@ -16,13 +16,15 @@ const A = f => path.join(DIR, 'assets', f);
 const OUT = process.argv[2] || path.join(DIR, 'tools', 'cache', 'preview.png');
 const PH = +(process.argv[3] || 860);
 const GAIN = +(process.argv[4] || 0.10);   // canh cho khop do sang that cua trang
+const DOT  = +(process.argv[5] || 1.0);    // he so co hat, de quet thu nhanh
+const ZOOM = +(process.argv[6] || 1.0);    // phong to quanh khuon mat de soi ket cau hat
 
 const meta = JSON.parse(fs.readFileSync(A('meta.json'), 'utf8'));
 const smap = fs.readFileSync(A('starmap.bin')).toString('base64');
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const page = await browser.newPage();
-const png = await page.evaluate(async ([smap, stride, aspect, PH, GAIN]) => {
+const [png, usedGain] = await page.evaluate(async ([smap, stride, aspect, PH, GAIN, DOT, ZOOM]) => {
   const bin = atob(smap);
   const u8 = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
@@ -52,24 +54,48 @@ const png = await page.evaluate(async ([smap, stride, aspect, PH, GAIN]) => {
   sc.fillStyle = g;
   sc.fillRect(0, 0, R * 2, R * 2);
 
-  const PH2 = H * 0.86;                      // chân dung cao 86% khung, giống trên trang
+  const PH2 = H * 0.86 * ZOOM;               // chân dung cao 86% khung, giống trên trang
   const PW = PH2 * aspect;
-  const SIZE = 3.05 * (H / 860);             // cỡ hạt cơ bản, quy về chiều cao khung
-  for (let k = 0; k < N; k++){
-    const o = k * stride;
-    const x = dv.getInt16(o, true) / 10000, y = dv.getInt16(o + 2, true) / 10000;
-    const br = u8[o + 4] / 255;
-    const sz = (stride >= 8 ? u8[o + 6] / 255 * 2.5 : 1.0);
-    const px = W * 0.5 + x * PW * 0.5;
-    const py = H * 0.5 - y * PH2 * 0.5;
-    const r = SIZE * sz;
-    c.globalAlpha = Math.min(1, br * GAIN);
-    c.drawImage(sp, px - r, py - r, r * 2, r * 2);
+  const SIZE = 3.05 * (H / 860) * DOT;       // cỡ hạt cơ bản, quy về chiều cao khung
+
+  function draw(gain){
+    c.globalCompositeOperation = 'source-over';
+    c.fillStyle = '#04060c'; c.fillRect(0, 0, W, H);
+    c.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < N; k++){
+      const o = k * stride;
+      const x = dv.getInt16(o, true) / 10000, y = dv.getInt16(o + 2, true) / 10000;
+      const br = u8[o + 4] / 255;
+      const sz = (stride >= 8 ? u8[o + 6] / 255 * 2.5 : 1.0);
+      const px = W * 0.5 + x * PW * 0.5;
+      const py = H * 0.5 - (y - 0.22 * (ZOOM - 1) / ZOOM) * PH2 * 0.5;
+      const r = SIZE * sz;
+      c.globalAlpha = Math.min(1, br * gain);
+      c.drawImage(sp, px - r, py - r, r * 2, r * 2);
+    }
   }
-  return cv.toDataURL('image/png');
-}, [smap, meta.stride || 6, meta.aspect, PH, GAIN]);
+
+  let gain = GAIN;
+  if (!(gain > 0)){
+    /* TỰ PHƠI SÁNG: vẽ thử rất mờ, đo xem chỗ sáng nhất tích được bao nhiêu rồi
+       nhân ngược lại sao cho phân vị 99,7% vừa chạm trần. Có bước này thì so sánh
+       giữa các lần chỉnh mới công bằng — không thì cứ tưởng đổi tham số làm nó
+       sáng/tối hơn, trong khi chỉ là phơi sáng lệch. */
+    const probe = 0.03;
+    draw(probe);
+    const d = c.getImageData(0, 0, W, H).data;
+    const hist = new Int32Array(256);
+    for (let i = 0; i < d.length; i += 4) hist[d[i + 1]]++;
+    const tot = (d.length / 4) | 0;
+    let acc = 0, p = 255;
+    for (let v = 255; v >= 0; v--){ acc += hist[v]; if (acc > tot * 0.003){ p = v; break; } }
+    gain = probe * (250 / Math.max(6, p - 6));
+  }
+  draw(gain);
+  return [cv.toDataURL('image/png'), gain];
+}, [smap, meta.stride || 6, meta.aspect, PH, GAIN, DOT, ZOOM]);
 await browser.close();
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, Buffer.from(png.split(',')[1], 'base64'));
-console.log('xem thu -> ' + OUT);
+console.log('xem thu -> ' + OUT + '   (gain ' + usedGain.toFixed(3) + ')');

@@ -4,7 +4,7 @@
 
 ## Tóm tắt nhanh
 
-- **Đang ở đâu**: v3 — **dựng lại toàn bộ chân dung sao** theo ảnh mẫu (stipple sci-fi). Có `tools/` sinh bản đồ sao, có git, có `build.js`.
+- **Đang ở đâu**: v4 — chân dung được **thắp đèn lại như trong phòng chụp** (dựng khối, đèn chính + 2 đèn viền, điều phối sáng tối), rải hạt thành stipple thật. Có `tools/` sinh bản đồ sao, có git, có `build.js`.
 - **Bản trên mạng đang là bản CŨ**: anh dặn để test ở máy trước, chưa đăng v3 lên link.
 - **Trang đã lên mạng**: `https://claude.ai/artifact/2LB1Y88rNRY7dFS334jJKj` (ai có link cũng mở được). Sửa xong thì `node build.js` rồi đăng đè `index.html` lên ĐÚNG địa chỉ đó — link không đổi.
 - **Tiếp theo (ưu tiên)**: 1) **test thật trên điện thoại** · 2) bật đồng bộ Firebase theo `SYNC.md` (cần anh bấm vài cái trong tài khoản Google) · 3) gỡ phụ thuộc mạng (three.js, Google Fonts).
@@ -20,7 +20,7 @@
 | `IDEAS.md` | Kế hoạch / ý tưởng làm tiếp |
 | `SYNC.md` | Hướng dẫn bật đồng bộ Firebase (chưa làm) |
 | `build.js` | `node build.js` — ghép template + assets ra `index.html` |
-| `tools/` | **Bộ sinh bản đồ sao chân dung** — `decode.mjs` (tách người khỏi nền báo/cờ) · `make-starmap.mjs` (rải sao) · `preview.mjs` (xem thử nhanh). Đọc `tools/README.md` trước khi chỉnh |
+| `tools/` | **Bộ sinh chân dung sao** — `relight.mjs` (ÁNH SÁNG) · `make-starmap.mjs` (HẠT) · `decode.mjs` (tách người khỏi nền báo/cờ) + 8 script soi bằng mắt. **Đọc `tools/README.md` trước khi chỉnh** |
 | `assets/` | Ảnh, nhạc, bản đồ sao gốc — nguồn của `build.js` |
 | `.gitattributes` | `* -text` — cấm git đổi byte file base64 6,7 MB |
 
@@ -65,6 +65,49 @@
 6. **Chưa test thật trên máy điện thoại của Vy** — việc cần làm ngay sau bản vá viewport.
 
 ## Nhật ký
+
+### 2026-09-19 (chiều) — Thắp đèn lại cho chân dung
+
+Anh muốn nó "đẹp hơn cả ảnh thật, kiểu nghệ thuật điều phối sáng tối". Bản sáng nay mới
+chỉ *chép lại* sáng tối của tấm ảnh chụp — mà tấm đó là ảnh chụp nhanh: sáng đều, bẹt,
+không có ý đồ. Nên lần này **bỏ hẳn ánh sáng cũ và thắp lại từ đầu**.
+
+**Thêm `tools/relight.mjs`** — tầng ánh sáng, tách hẳn khỏi tầng rải hạt:
+- ước lượng KHỐI của khuôn mặt (không cần biết nó là mặt): lấy chính mặt nạ đem làm nhoè
+  hai mức — một dải hẹp sát rìa cho mặt quay ngang, một độ cong thoải cho cả cái đầu;
+- chiếu ba ngọn đèn lên khối đó: **đèn chính** trên-trái-trước, **đèn viền** trên-phải-sau
+  (cộng một ngọn phụ yếu bên trái cho bố cục khỏi lệch), **đèn phụ** dưới-trước rất nhẹ;
+- ghép vào ảnh bằng **soft light**, không nhân thẳng — giữ nguyên nét mắt/kính/môi;
+- rồi mới tới bố cục: đèn sân khấu quanh mặt, chìm vai, đường cong nhấn, vai sáng,
+  chấm bắt sáng, và **đốm sáng trong con ngươi** (dò bằng "chỗ sáng mà xung quanh tối").
+
+**Đường viền sáng ôm quanh tóc là thứ ảnh gốc KHÔNG có**, và là thứ làm bức ảnh sang lên
+rõ nhất. Nó có lớp hạt riêng.
+
+**Bốn bẫy thật, ghi lại kẻo quên**:
+1. **Cỡ hạt so với khoảng cách giữa các hạt.** Đo ra gò má có **3,25 hạt/điểm ảnh** —
+   khoảng cách còn nhỏ hơn nửa điểm ảnh. Không đời nào thấy được "điểm", vùng sáng dính
+   liền thành mảng trắng và nuốt luôn con mắt. Cứ tưởng thuật toán mất mắt, hoá ra chỉ là
+   hạt quá khổ. Viết `tools/raster.mjs` để đo thẳng thay vì đoán.
+2. **`uPGain` không phải muốn to bao nhiêu cũng được.** Để 4,6 thì mỗi hạt một mình đã
+   trắng bệt → thông tin tông vốn nằm ở MẬT ĐỘ bị xoá sạch, chỗ nào có hạt là chỗ đó
+   trắng. Phải để từng hạt mờ và để chúng cộng dồn lên (2,05).
+3. **Lớp NÉT phải có luật độ sáng riêng.** Con ngươi, hàng mi, gọng kính vốn tối mà lại
+   rất nhiều nét: cho chúng hạt sáng đều như da là mắt sáng ngang trán.
+4. **Ngưỡng chọn sao nối chòm bị số cứng.** Đổi luật độ sáng một cái là `MIN_TONE = 0.42`
+   hết lọc được gì, cả khuôn mặt biến thành lưới trắng lúc bấm chuột. Nay tự suy theo
+   phân vị.
+
+Sửa thêm `decode.mjs`: nếp gấp lá cờ đổ bóng tối y như tóc (L≈0,15) nhưng vẫn đỏ gắt, nên
+cả dải cờ chạy dọc mép trái đang bị hút vào mặt nạ. Thêm điều kiện trung tính là hết.
+
+**Kết quả**: 118.168 hạt (bản sáng nay 133.807, bản đầu 113.180) — **nhẹ hơn cả hai**,
+`index.html` 6,76 MB. Byte thứ 5 của mỗi hạt đổi nghĩa từ "độ xám gốc" sang **ĐỘ SÂU**,
+nên khi máy quay trôi nhẹ thì khuôn mặt có khối thật chứ không phải tấm bìa dán hạt.
+Đã soi lại 4 hình thái, khổ điện thoại, rê tay, nhấp, màn "DÀNH CHO EM", các chương chữ:
+không lỗi JS.
+
+**Vẫn CHƯA đăng lên link** — anh dặn để test ở máy trước.
 
 ### 2026-09-19 — Dựng lại chân dung sao theo ảnh mẫu (stipple sci-fi)
 

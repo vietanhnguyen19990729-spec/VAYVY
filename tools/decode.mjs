@@ -31,7 +31,8 @@ const K = {
   skinRBx: 0.34,   // nhưng không ấm tới mức lá cờ
   skinRG:  0.26,
   skinLo:  0.30,
-  openR:   2,      // dọn hạt lẻ
+  darkRB:  0.14,   // chỗ TỐI mà vẫn đỏ gắt là bóng đổ trên lá cờ, không phải tóc
+  openR:   3,      // dọn hạt lẻ (3 = đủ bay mấy vệt ảnh báo in đậm, chưa ăn vào tóc)
   closeR:  7       // khép các khe giữa sợi tóc
 };
 
@@ -94,7 +95,10 @@ for (let i = 0; i < NP; i++){
   const R = Rb[i], G = Gb[i], B = Bb[i];
   const L = (0.2126 * R + 0.7152 * G + 0.0722 * B) / 255;
   const rb = (R - B) / 255, rg = (R - G) / 255;
-  const dark = L < K.darkL;
+  /* Chỗ tối KHÔNG mặc nhiên là tóc: nếp gấp lá cờ đổ bóng cũng tối y như tóc
+     (L ≈ 0,15) nhưng vẫn đỏ gắt (R−B ≈ 0,24) trong khi tóc trung tính (R−B ≈ 0,04).
+     Thiếu điều kiện này là cả dải cờ chạy dọc mép trái bị hút vào mặt nạ. */
+  const dark = L < K.darkL && rb < K.darkRB;
   const skin = L > K.skinLo && rb > K.skinRB && rb < K.skinRBx && rg < K.skinRG;
   m[i] = (dark || skin) ? 1 : 0;
 }
