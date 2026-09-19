@@ -230,25 +230,23 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
 #finaleBtn:hover{color:#fff;border-color:var(--rose);box-shadow:0 0 22px rgba(255,125,158,.26)}
 #finaleBtn svg{width:13px;height:13px;flex:none;animation:beat 1.9s ease-in-out infinite}
 
-/* lời bài hát chạy karaoke phía trên thanh điều khiển */
+/* lời bài hát chạy karaoke — cố định trên thanh điều khiển, hiện xuyên suốt lúc cuộn trang */
 #lyricBar{
-  position:fixed;left:50%;transform:translateX(calc(-50% - 70px)) translateY(6px);
-  bottom:calc(98px + env(safe-area-inset-bottom,0px));z-index:6;
+  position:fixed;left:50%;transform:translateX(-50%) translateY(6px);
+  bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:6;
   max-width:calc(100vw - 28px);pointer-events:none;
   display:flex;justify-content:center;
   opacity:0;transition:opacity .5s ease,transform .5s ease
 }
-#lyricBar.show{opacity:1;transform:translateX(calc(-50% - 70px)) translateY(0)}
+#lyricBar.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .lyricInner{
-  position:relative;font-family:var(--voice);font-style:italic;
-  font-size:17px;letter-spacing:.01em;white-space:nowrap;color:transparent
+  font-family:var(--voice);font-style:italic;
+  font-size:1rem;letter-spacing:.01em;white-space:nowrap;max-width:100%;text-align:center
 }
-.lyricBase,.lyricFill{position:absolute;left:0;top:0;white-space:nowrap}
-.lyricBase{color:var(--mute)}
-.lyricFill{color:var(--aqua);overflow:hidden;width:0%;text-shadow:0 0 14px rgba(150,220,255,.35)}
+.lyricInner .lw{color:#7f93ab;transition:color .45s ease,text-shadow .45s ease}
+.lyricInner .lw.lit{color:var(--aqua);text-shadow:0 0 14px rgba(150,220,255,.35)}
 @media (max-width:600px){
-  .lyricInner{font-size:14px}
-  #lyricBar{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  .lyricInner{font-size:.8rem}
 }
 
 /* chỉ hiện khi trình duyệt chặn nhạc tự phát — chạm một cái là tắt hẳn, không thành nút cố định */
@@ -607,10 +605,9 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
 
 </main>
 
-<footer>
-  <div class="f1">VyA · Đài quan trắc riêng · MMXXVI</div>
-  <div class="f2">Từng ấy ngôi sao, xếp lại thì vừa đúng một người.</div>
-</footer>
+<div id="lyricBar" aria-hidden="true">
+  <div class="lyricInner" id="lyricLine"></div>
+</div>
 
 <div id="console" role="group" aria-label="Điều khiển">
   <button class="btn" data-form="0" aria-pressed="true"><span class="dot"></span>Chân dung</button>
@@ -622,13 +619,6 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
     Dành cho em
   </button>
   <button class="btn" id="dJump" hidden><span class="dot"></span>Hẹn tiếp theo</button>
-</div>
-
-<div id="lyricBar" aria-hidden="true">
-  <div class="lyricInner">
-    <span class="lyricBase" id="lyricBase"></span>
-    <span class="lyricFill" id="lyricFill"></span>
-  </div>
 </div>
 
 <div id="tapSound" hidden>Chạm một cái để mở nhạc</div>
@@ -812,11 +802,14 @@ const LYRICS = [
 ];
 
 const lyricBar = document.getElementById('lyricBar');
-const lyricBase = document.getElementById('lyricBase');
-const lyricFill = document.getElementById('lyricFill');
+const lyricLine = document.getElementById('lyricLine');
 let lyricPlan = null;
 let lyricActive = -1;
+let lyricSpans = [];
 
+/* mỗi câu tách thành từng TỪ kèm mốc thời gian riêng — sáng dần theo từng từ
+   (đổi từ kiểu quét sáng liên tục theo ký tự sang bật sáng rời rạc theo từ,
+   mượt hơn nhờ CSS transition trên từng span thay vì clip theo phần trăm). */
 function buildLyricPlan(){
   const lines = LYRICS.filter(l => l.text && l.text.trim());
   if (!lines.length || !isFinite(bgm.duration) || bgm.duration <= 0){ lyricPlan = null; return; }
@@ -829,7 +822,16 @@ function buildLyricPlan(){
     cursor += weights[i];
     const next = lines[i + 1];
     const end = (next && typeof next.at === 'number') ? next.at : (cursor / totalW) * dur;
-    return { text: l.text.trim(), start, end: Math.max(end, start + 0.3) };
+    const words = l.text.trim().split(/\s+/);
+    const wWeights = words.map(w => Math.max(1, w.length));
+    const wTotal = wWeights.reduce((a, b) => a + b, 0);
+    let wCursor = 0;
+    const wordTimes = words.map((w, wi) => {
+      const wStart = start + (wCursor / wTotal) * (end - start);
+      wCursor += wWeights[wi];
+      return { text: w, start: wStart };
+    });
+    return { start, end: Math.max(end, start + 0.3), words: wordTimes };
   });
 }
 
@@ -840,11 +842,18 @@ function renderLyric(t){
   const line = lyricPlan[idx];
   if (idx !== lyricActive){
     lyricActive = idx;
-    lyricBase.textContent = line.text;
-    lyricFill.textContent = line.text;
+    lyricLine.textContent = '';
+    lyricSpans = line.words.map((w, wi) => {
+      const span = document.createElement('span');
+      span.className = 'lw';
+      span.textContent = w.text + (wi < line.words.length - 1 ? ' ' : '');
+      lyricLine.appendChild(span);
+      return span;
+    });
   }
-  const progress = Math.min(1, Math.max(0, (t - line.start) / (line.end - line.start)));
-  lyricFill.style.width = (progress * 100).toFixed(2) + '%';
+  line.words.forEach((w, wi) => {
+    lyricSpans[wi].classList.toggle('lit', t >= w.start);
+  });
   lyricBar.classList.add('show');
 }
 
