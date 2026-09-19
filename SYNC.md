@@ -1,10 +1,18 @@
 # Bật đồng bộ — để lời hẹn của Vy hiện thẳng trên máy anh
 
-Chưa làm bước này thì tính năng **vẫn chạy đủ**: Vy bấm CÓ, chọn ngày giờ, viết lời nhắn,
-trang lưu lại và hiện thẻ hẹn. Chỉ là nó nằm trong máy Vy — anh phải bấm **"Gửi cho anh"**
-(Vy gửi cho anh một đường link, anh bấm vào là thấy đúng thẻ hẹn đó).
+## Đọc cái này trước — có 2 bước, bước 1 là bắt buộc
 
-Làm xong hướng dẫn này thì bỏ luôn bước gửi tay: Vy bấm xong, anh mở trang là thấy.
+| | Làm gì | Kết quả |
+|---|---|---|
+| **Bước A — BẮT BUỘC** | Đưa trang lên mạng (Phần 3 ở dưới) | Vy chốt xong bấm **"Gửi cho anh"** → gửi anh một đường link → anh bấm là thấy đúng thẻ hẹn |
+| **Bước B — tuỳ chọn** | Thêm Firebase (Phần 1 + 2) | Bỏ luôn bước gửi tay: Vy bấm xong, anh mở trang là tự thấy |
+
+**Vì sao bước A bắt buộc**: nếu trang chỉ là một file gửi qua Zalo, đường link Vy gửi sẽ trỏ
+vào ổ đĩa máy Vy (`file:///C:/Users/.../index.html`) — máy anh mở không ra. Phải có một địa chỉ
+chung trên mạng thì cả link chia sẻ lẫn Firebase mới có ý nghĩa.
+
+Chưa làm gì cả thì tính năng **vẫn chạy đủ trên máy Vy**: bấm CÓ, chọn ngày giờ, viết lời nhắn,
+trang lưu và hiện thẻ hẹn có đếm ngược — chỉ là chưa sang được máy anh.
 
 ---
 
