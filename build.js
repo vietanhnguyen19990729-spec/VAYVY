@@ -19,7 +19,8 @@ const FILL = {
   __PORTRAIT_B64__: 'data:image/jpeg;base64,' + b64('portrait.jpg'),
   __AUDIO_B64__:    'data:audio/mpeg;base64,' + b64('bgm.mp3'),
   __STARMAP_B64__:  b64('starmap.bin'),
-  __ASPECT__:       String(meta.aspect)
+  __ASPECT__:       String(meta.aspect),
+  __STRIDE__:       String(meta.stride || 6)
 };
 
 for (const [key, val] of Object.entries(FILL)) {

@@ -50,7 +50,7 @@ body::after{
 #vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
   background:
     linear-gradient(to top, rgba(4,6,12,.94) 0%, rgba(4,6,12,.62) 15%, rgba(4,6,12,.12) 33%, transparent 46%),
-    linear-gradient(to right, rgba(4,6,12,.82) 0%, rgba(4,6,12,.34) 24%, transparent 44%)}
+    linear-gradient(to right, rgba(4,6,12,.70) 0%, rgba(4,6,12,.24) 24%, transparent 44%)}
 /* lúc đọc chữ thì hạ sáng thêm */
 #scrim{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;
   transition:opacity .9s cubic-bezier(.3,.7,.2,1);
@@ -67,7 +67,10 @@ body::after{
 #fxWord{position:fixed;z-index:6;pointer-events:none;left:50%;top:50%;width:min(94vw,780px);
   transform:translate(-50%,-50%);text-align:center;opacity:0;padding:34px 18px;box-sizing:border-box;
   /* lót một vùng tối rất mờ, không có mép, để chữ luôn đọc được dù hạt bay qua */
-  background:radial-gradient(64% 58% at 50% 50%, rgba(4,6,12,.72), rgba(4,6,12,.34) 58%, transparent 78%);
+  /* Nền trời giờ đã đen thật (không còn bị kéo lên xám xanh), nên chỉ cần phủ rất
+     nhẹ là chữ đã đọc được. Phủ nặng như trước là thành một vệt tròn mờ đè lên bầu
+     sao, nhìn ra ngay. */
+  background:radial-gradient(66% 60% at 50% 50%, rgba(4,6,12,.40), rgba(4,6,12,.17) 58%, transparent 80%);
   transition:opacity 1.5s cubic-bezier(.3,.7,.2,1), letter-spacing 2.4s cubic-bezier(.2,.7,.2,1),
              filter 1.5s ease}
 #fxWord.on{opacity:1}
@@ -255,8 +258,8 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
   content:"";position:absolute;z-index:-1;pointer-events:none;
   left:-8vw;right:-8vw;top:-12vh;bottom:-14vh;
   background:
-    radial-gradient(74% 64% at 30% 52%, rgba(3,6,12,.90), rgba(3,6,12,.66) 42%,
-                    rgba(3,6,12,.30) 68%, rgba(3,6,12,0) 86%);
+    radial-gradient(74% 64% at 30% 52%, rgba(3,6,12,.62), rgba(3,6,12,.42) 42%,
+                    rgba(3,6,12,.18) 68%, rgba(3,6,12,0) 86%);
 }
 
 .ask{max-width:56ch}
@@ -1675,10 +1678,14 @@ function bail(){
   document.getElementById('boot').classList.add('off');
 }
 
-/* bản đồ sao ĐƠN SẮC: 6 byte/hạt — x,y (int16) · độ sáng · độ xám.
-   Ảnh hiện ra bằng MẬT ĐỘ sao chứ không bằng màu: chỗ tối là trời trống. */
+/* bản đồ sao ĐƠN SẮC, sinh bằng `node tools/make-starmap.mjs`:
+     8 byte/hạt — x,y (int16) · độ sáng · độ xám gốc · cỡ hạt · lớp
+     lớp: 0 da · 1 tóc · 2 nét (mắt/kính/môi) · 3 bụi rìa
+   Ảnh hiện ra bằng MẬT ĐỘ sao chứ không bằng màu: chỗ tối là trời trống.
+   Mật độ được rải bằng khuếch tán sai số nên khoảng cách giữa các hạt rất đều —
+   đó là chỗ khác nhau giữa "chân dung vẽ bằng điểm" và "ảnh bị rắc nhiễu". */
 const PORTRAIT_ASPECT = __ASPECT__;
-const STRIDE = 6;
+const STRIDE = __STRIDE__;
 
 function readStarmap(){
   const b64 = document.getElementById('smap').textContent.trim();
@@ -1789,6 +1796,7 @@ async function boot(){
   const aText     = new Float32Array(N * 3);
   const aScatter  = new Float32Array(N * 3);   // chỗ ngôi sao nằm TRƯỚC khi tụ lại thành em
   const aTone     = new Float32Array(N);       // độ sáng riêng của từng ngôi
+  const aPsz      = new Float32Array(N);       // cỡ hạt lúc là CHÂN DUNG (đã tính sẵn)
   const aSeed     = new Float32Array(N * 4);   // cỡ · pha · trễ morph · trễ tụ
   const aHb       = new Float32Array(N);       // độ sáng riêng khi đang là trái tim
 
@@ -1833,6 +1841,8 @@ async function boot(){
     const py = smap.view.getInt16(o + 2, true) / 10000;
     const br = smap.u8[o + 4] / 255;   // độ sáng ngôi sao
     const lu = smap.u8[o + 5] / 255;   // độ xám gốc -> phù điêu rất nhẹ
+    const psz = smap.u8[o + 6] / 255 * 2.5;  // cỡ hạt đã tính sẵn theo vùng sáng/tối
+    const pcl = smap.u8[o + 7];              // 0 da · 1 tóc · 2 nét · 3 bụi
 
     /* chân dung */
     aPortrait[k]     = px * W * 0.5;
@@ -1898,8 +1908,13 @@ async function boot(){
 
     aTone[i] = br;
 
+    /* Cỡ hạt lúc là chân dung do bộ sinh bản đồ quyết định: chỗ sáng thì hạt NHỎ và
+       thưa gió (thấy được khoảng trống giữa các hạt), chỗ tối thì to hơn một chút.
+       Riêng lớp NÉT (mắt, gọng kính, viền môi) nhỏ và đanh nhất để nét không bị nhoè. */
+    aPsz[i] = psz * (pcl === 2 ? 0.94 : 1.0);
+
     const s = i * 4;
-    aSeed[s]     = 0.80 + br * 0.42 + Math.random() * 0.22;  // cỡ hạt
+    aSeed[s]     = 0.80 + br * 0.42 + Math.random() * 0.22;  // cỡ hạt (các hình thái khác)
     aSeed[s + 1] = Math.random();                            // pha lấp lánh
     aSeed[s + 2] = Math.random();                            // trễ khi đổi hình thái
     aSeed[s + 3] = Math.random();                            // trễ khi tụ về
@@ -1910,6 +1925,12 @@ async function boot(){
   const DPR = Math.min(devicePixelRatio || 1, narrow ? 1.6 : 2);
   renderer.setPixelRatio(DPR);
   renderer.setSize(innerWidth, innerHeight);
+  /* Ảnh ra thẳng, KHÔNG mã hoá lại sang sRGB.
+     Để mặc định, three.js coi giá trị trong shader là ánh sáng tuyến tính rồi mã hoá
+     lại lúc xuất -> nền đen #04060c bị kéo lên thành (32,40,57): cả bầu trời phủ một
+     lớp xám xanh, chân dung không bao giờ bật khỏi nền được. Bầu sao này vốn đã tự
+     cộng sáng theo mật độ hạt nên không cần khâu mã hoá đó. */
+  renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
   renderer.setClearColor(0x04060c, 1);
   stage.appendChild(renderer.domElement);
 
@@ -1919,7 +1940,9 @@ async function boot(){
   scene.add(group);
 
   /* trường sao nền xa — CÙNG chất liệu với chân dung để hai lớp hoà vào nhau */
-  const bgN = narrow ? 1500 : 3800;
+  /* nền phải THUA HẲN chân dung, nếu không mắt bị chia đôi: bớt số sao, hạ độ sáng,
+     chỉ chừa vài ngôi to sáng rải rất thưa cho bầu trời có chiều sâu */
+  const bgN = narrow ? 1100 : 2600;
   const bgPos = new Float32Array(bgN * 3);
   const bgSeed = new Float32Array(bgN);
   for (let i = 0; i < bgN; i++){
@@ -1942,8 +1965,9 @@ async function boot(){
       'void main(){',
       '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
       '  float tw = 0.45 + 0.55 * sin(uTime * 0.7 + aSeed * 42.0);',
-      '  vA = 0.16 + 0.52 * tw;',
-      '  gl_PointSize = (0.7 + aSeed * 2.0) * uDpr * (22.0 / -mv.z);',
+      '  float big = step(0.972, fract(aSeed * 13.7));',
+      '  vA = (0.085 + 0.30 * tw) * (1.0 + big * 2.1);',
+      '  gl_PointSize = (0.55 + aSeed * 1.35 + big * 2.2) * uDpr * (22.0 / -mv.z);',
       '  gl_Position = projectionMatrix * mv;',
       '}'
     ].join('\n'),
@@ -1967,6 +1991,7 @@ async function boot(){
   geo.setAttribute('aText',    new THREE.BufferAttribute(aText, 3));
   geo.setAttribute('aScatter', new THREE.BufferAttribute(aScatter, 3));
   geo.setAttribute('aTone',    new THREE.BufferAttribute(aTone, 1));
+  geo.setAttribute('aPsz',     new THREE.BufferAttribute(aPsz, 1));
   geo.setAttribute('aSeed',    new THREE.BufferAttribute(aSeed, 4));
 
   const TRAIL = [new THREE.Vector3(999, 999, 0), new THREE.Vector3(999, 999, 0),
@@ -1983,7 +2008,7 @@ async function boot(){
     uShock:  { value: new THREE.Vector3(0, 0, -1) },
     uAudio:  { value: 0 },
     uGlow:   { value: 0 },
-    uPGain:  { value: 0.40 },
+    uPGain:  { value: 1.26 },
     uSize:   { value: 7 },
     uDpr:    { value: DPR },
     uReveal: { value: 0 },
@@ -1991,7 +2016,7 @@ async function boot(){
        phải co lại vừa khung và kéo về đúng giữa, vì chân dung đang lệch phải */
     uTextS:  { value: 1 },
     uTextX:  { value: 0 },
-    uStar:   { value: new THREE.Vector3(0.74, 0.86, 1.00) },
+    uStar:   { value: new THREE.Vector3(0.86, 0.92, 1.00) },
     uWarm:   { value: new THREE.Vector3(1.00, 0.88, 0.74) },
     uTintG:  { value: new THREE.Vector3(0.70, 0.84, 1.00) },
     uTintH:  { value: new THREE.Vector3(1.00, 0.56, 0.64) },
@@ -2045,7 +2070,7 @@ async function boot(){
       'uniform float uHc;',
       'attribute vec3 aGalaxy, aHeart, aText, aScatter;',
       'attribute vec4 aSeed;',
-      'attribute float aTone, aHb;',
+      'attribute float aTone, aHb, aPsz;',
       'varying vec3 vColor;',
       'varying float vAlpha;',
       'void main(){',
@@ -2082,9 +2107,15 @@ async function boot(){
       '  thump *= w.z;',
       '  p *= 1.0 + thump * 0.052;',
       FIELD,
+      /* Chân dung giờ sáng gấp mấy lần trước, nên cú chạm/rê tay phải nhẹ tay hẳn:
+         để nguyên độ bùng cũ là cả khuôn mặt loé trắng, mất sạch nét. Thiên hà và
+         trái tim vẫn giữ nguyên độ bùng — ở đó loé lên mới đã. */
+      '  hot *= mix(1.0, 0.25, w.x);',
       /* ánh sao đơn sắc; một số ít ngôi ngả ấm cho trời có nhiệt độ màu như thật */
+      /* vài ngôi ngả ấm cho trời có nhiệt độ màu thật — nhưng KHÔNG được rơi vào
+         khuôn mặt: chân dung phải giữ đúng một sắc trắng lạnh, lốm đốm vàng là hỏng */
       '  float warm = step(0.90, fract(aSeed.y * 7.13));',
-      '  vec3 sky = mix(uStar, uWarm, warm * 0.8);',
+      '  vec3 sky = mix(uStar, uWarm, warm * 0.8 * (1.0 - 0.92 * w.x));',
       '  float other = clamp(w.y + w.z + w.w, 0.0, 1.0);',
       '  vec3 tint = (uTintG * w.y + uTintH * w.z + uTintT * w.w) / max(other, 0.0001);',
       /* vài ngôi ngả vàng ấm cho trái tim/thiên hà có chiều sâu màu, không bệt một sắc hồng */
@@ -2094,14 +2125,17 @@ async function boot(){
       '  vec3 hn = normalize(vec3(p.x, p.y - uHc, p.z) + vec3(1e-4));',
       '  float rim = 0.42 + 1.25 * pow(1.0 - abs(hn.z), 3.0);',
       '  float hb = mix(1.0, aHb * rim, w.z);',
-      '  vec3 base = mix(sky * (aTone * uPGain), tint * (0.20 + aSeed.x * 0.22) * hb, other * 0.92);',
+      '  vec3 base = mix(sky * (aTone * uPGain), tint * (0.145 + aSeed.x * 0.155) * hb, other * 0.92);',
       '  float tw = 0.84 + 0.16 * sin(uTime * 1.6 + aSeed.y * 37.0);',
       '  vColor = base * (tw + hot * 1.5 + uAudio * 0.16 + uGlow * 1.10 + thump * 0.55);',
       '  vAlpha = rv;',
       '  vec4 mv = modelViewMatrix * vec4(p, 1.0);',
       /* lúc còn là bụi sao thì hạt to và loãng, tụ lại thì đanh dần */
       '  float dust = mix(2.4, 1.0, rv);',
-      '  gl_PointSize = uSize * aSeed.x * dust * mix(1.0, 0.55 + 0.52 * aHb, w.z)',
+      /* cỡ hạt: lúc là CHÂN DUNG thì lấy cỡ đã tính sẵn theo vùng sáng-tối của ảnh,
+         các hình thái khác vẫn dùng cỡ ngẫu nhiên cũ -> thiên hà/trái tim không đổi */
+      '  float psz = mix(aSeed.x * 0.66, aPsz, w.x);',
+      '  gl_PointSize = uSize * psz * dust * mix(1.0, 0.55 + 0.52 * aHb, w.z)',
       /* chữ co nhỏ lại cho vừa màn thì hạt phải nhỏ theo, không thì nét số bệt thành vệt */
       '               * mix(1.0, max(0.62, uTextS), w.w)',
       '               * (1.0 + hot * 0.9 + uAudio * 0.12 + uGlow * 0.35 + thump * 0.22) * uDpr / (-mv.z);',
@@ -2175,9 +2209,12 @@ async function boot(){
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.20, 0.80, 0.74);
+  /* Ngưỡng bloom thấp + lực vừa: chỉ những hạt SÁNG NHẤT (trán, gò má, vài sợi tóc
+     bắt sáng) toả quầng, nên khuôn mặt như có ánh từ bên trong mà nét vẫn đanh.
+     Để lực cao là cả mặt nhoè thành một mảng sáng, mất mắt mất kính. */
+  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.28, 0.80, 0.58);
   composer.addPass(bloom);
-  let bloomBase = 0.20;
+  let bloomBase = 0.28;
 
   /* ---------------- khung nhìn: chân dung là thứ TO NHẤT trên trang ---------------- */
   let baseZ = 3, groupY = 0, groupX = 0, halfTan = 0.38;
@@ -2199,7 +2236,7 @@ async function boot(){
     uniforms.uTextS.value = Math.min(1, visHalfX * 2 * 0.88 / TW);
     uniforms.uTextX.value = groupX;
     /* cỡ hạt xấp xỉ khoảng cách giữa hai hạt trên màn, to hơn là nhoè mất nét */
-    uniforms.uSize.value = (tall ? 2.65 : 2.45) * baseZ;
+    uniforms.uSize.value = (tall ? 3.68 : 3.40) * baseZ;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
     composer.setSize(innerWidth, innerHeight);
@@ -2416,7 +2453,15 @@ async function boot(){
     group.rotation.y = tiltX * 0.08 + Math.sin(t * 0.13) * 0.014;
     group.rotation.x = -tiltY * 0.06;
 
-    bloom.strength = bloomBase + uniforms.uAudio.value * 0.15 + glow * 0.85;
+    /* Chân dung cần ngưỡng bloom THẤP: chỉ trán, gò má và vài sợi tóc bắt sáng mới
+       toả quầng, nhờ vậy mặt như có ánh từ bên trong. Thiên hà / trái tim / dòng chữ
+       thì cả khối vốn đã sáng — để nguyên ngưỡng ấy là nhoè thành một mảng trắng bệt,
+       mất hết hạt. Nên ngưỡng và lực bloom chạy theo tỉ trọng hình thái chân dung. */
+    const pw = uniforms.uWA.value.x
+             + (uniforms.uWB.value.x - uniforms.uWA.value.x) * Math.min(1, uniforms.uMorph.value);
+    bloom.threshold = 0.58 + (1 - pw) * 0.34;
+    bloom.strength = (bloomBase * pw + 0.15 * (1 - pw))
+                   + uniforms.uAudio.value * 0.15 + glow * 0.85;
 
     composer.render();
   }

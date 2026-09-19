@@ -4,7 +4,8 @@
 
 ## Tóm tắt nhanh
 
-- **Đang ở đâu**: v2.1 — chương **Lời mời hẹn buổi tiếp theo** (nút `Đồng ý`/`Từ chối`, đã sửa nền + đường chạy). Có git, có `build.js`, asset gốc đã cứu lại.
+- **Đang ở đâu**: v3 — **dựng lại toàn bộ chân dung sao** theo ảnh mẫu (stipple sci-fi). Có `tools/` sinh bản đồ sao, có git, có `build.js`.
+- **Bản trên mạng đang là bản CŨ**: anh dặn để test ở máy trước, chưa đăng v3 lên link.
 - **Trang đã lên mạng**: `https://claude.ai/artifact/2LB1Y88rNRY7dFS334jJKj` (ai có link cũng mở được). Sửa xong thì `node build.js` rồi đăng đè `index.html` lên ĐÚNG địa chỉ đó — link không đổi.
 - **Tiếp theo (ưu tiên)**: 1) **test thật trên điện thoại** · 2) bật đồng bộ Firebase theo `SYNC.md` (cần anh bấm vài cái trong tài khoản Google) · 3) gỡ phụ thuộc mạng (three.js, Google Fonts).
 - **Rủi ro lớn nhất**: trang hiện **chết hoàn toàn nếu không có Internet** — `import * as THREE from 'three'` lấy từ CDN, import hỏng là cả file JS không chạy, mất luôn cả chương lời mời.
@@ -19,6 +20,7 @@
 | `IDEAS.md` | Kế hoạch / ý tưởng làm tiếp |
 | `SYNC.md` | Hướng dẫn bật đồng bộ Firebase (chưa làm) |
 | `build.js` | `node build.js` — ghép template + assets ra `index.html` |
+| `tools/` | **Bộ sinh bản đồ sao chân dung** — `decode.mjs` (tách người khỏi nền báo/cờ) · `make-starmap.mjs` (rải sao) · `preview.mjs` (xem thử nhanh). Đọc `tools/README.md` trước khi chỉnh |
 | `assets/` | Ảnh, nhạc, bản đồ sao gốc — nguồn của `build.js` |
 | `.gitattributes` | `* -text` — cấm git đổi byte file base64 6,7 MB |
 
@@ -63,6 +65,52 @@
 6. **Chưa test thật trên máy điện thoại của Vy** — việc cần làm ngay sau bản vá viewport.
 
 ## Nhật ký
+
+### 2026-09-19 — Dựng lại chân dung sao theo ảnh mẫu (stipple sci-fi)
+
+**Vấn đề**: bản v1 rải sao **mật độ gần như ĐỀU** trên một mảng loang, ảnh chỉ hiện ra nhờ
+độ sáng từng hạt — đúng kiểu "ảnh bị biến thành chấm nhiễu". Script sinh ra `starmap.bin`
+thì đã mất từ lâu, nên phải viết lại từ đầu.
+
+**Bộ công cụ mới `tools/`** (chi tiết + bảng số đo trong `tools/README.md`):
+- `decode.mjs` — tách người khỏi nền. Ảnh gốc chụp trước tường dán **báo** và một lá **cờ đỏ**;
+  mặt nạ cũ (dựng từ chính bản đồ sao v1) ăn cả tờ báo nên chữ báo vẫn hiện mờ trên đầu.
+  Nay tách bằng ba dấu hiệu tách bạch: rất tối (tóc/áo) · ngả ấm vừa (da) · còn lại là nền.
+- `make-starmap.mjs` — rải sao. Mật độ **theo tông ảnh**, rải bằng **khuếch tán sai số**
+  (Floyd–Steinberg) trên lưới mịn gấp 2 nên khoảng cách giữa các hạt rất đều. Bốn lớp hạt:
+  da · tóc (chạy theo **hướng sợi** lấy từ ten-xơ cấu trúc, chỉ vài sợi bắt sáng) ·
+  nét (mắt/kính/môi, hạt nhỏ và đanh nhất) · bụi rìa (để bóng người không có viền cứng).
+- `preview.mjs` — xem thử `starmap.bin` thành ảnh, không phải mở cả trang.
+
+**Bẫy thật đã gặp, ghi lại kẻo quên**:
+1. **Không gian màu** — three.js mặc định mã hoá lại sang sRGB lúc xuất, kéo nền đen
+   `#04060c` lên thành `(32,40,57)`: cả bầu trời phủ một lớp xám xanh, mặt chỉ sáng gấp 1,7
+   lần nền nên nhìn thế nào cũng bệt. Đặt `outputColorSpace = LinearSRGBColorSpace` là nền
+   về đen thật, tương phản bật hẳn lên. **Đây là thay đổi lớn nhất của cả bản này.**
+2. **Khuếch tán sai số chỉ đẻ được tối đa 1 hạt/ô** — chạy trên lưới ảnh gốc thì cả khuôn
+   mặt chạm trần ~1 hạt/điểm ảnh, muốn dày hơn cũng không dày được, trán cứ bệt thành mảng
+   trắng. Phải chạy trên lưới mịn gấp 2.
+3. **Nổi nét (unsharp) tay nặng sinh VIỀN SÁNG quanh mặt** — đúng cái kiểu tô đường viền
+   phải tránh. Hạ `sharpAmt` 0,90 → 0,40.
+4. **Các hình thái khác bị vạ lây**: chân dung sáng lên thì trái tim và dòng chữ cháy thành
+   mảng trắng. Phải cho cỡ hạt và độ sáng của **thiên hà / trái tim / dòng chữ** co lại, và
+   cho **ngưỡng bloom chạy theo hình thái** (chân dung ngưỡng thấp để trán toả sáng, hình
+   thái khác ngưỡng cao để không nhoè).
+5. **Nền tối chồng lên (`#scrim`) thành vệt bẩn** — nền đã đen thật thì không cần phủ nặng
+   như trước nữa; hạ từ `.72` xuống `.40`.
+6. **Chạm/rê tay làm loé trắng cả mặt** — chân dung giờ sáng gấp mấy lần nên phải nhẹ tay
+   hẳn cú bùng sáng, riêng cho hình thái chân dung (`hot *= mix(1.0, 0.25, w.x)`).
+
+**Kết quả**: 133.807 hạt (v1: 113.180), `index.html` 6,91 MB (v1: 6,41 MB), vẫn **60 fps**.
+Định dạng `starmap.bin` đổi từ 6 byte/hạt sang **8 byte/hạt** (thêm cỡ hạt + lớp) — `build.js`
+điền `__STRIDE__` từ `assets/meta.json` nên không phải sửa tay.
+Đã soi lại cả 4 hình thái, khổ điện thoại, màn cao trào, nét nối chòm sao: không lỗi JS.
+Bộ 23 kiểm tra của chương lời mời vẫn đạt **23/23**.
+
+**Còn có thể chỉnh thêm** (đều là núm, không phải viết lại): `contrast`/`gamma` cho độ bệt của
+trán · `strandDim`/`strandShine` cho tóc đậm nhạt · `detailAmt` cho độ rõ của mắt và gọng kính ·
+`fadeBand`/`dustBand` cho độ tan của rìa · `vyaTune(gain, bloom, threshold, size)` chỉnh sống
+ngay trong console.
 
 ### 2026-09-19 — Sửa chương lời mời theo góp ý
 
