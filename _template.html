@@ -537,7 +537,7 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
       <h2>Buổi tiếp theo, em nhé?</h2>
 
       <div class="ask" id="askBox">
-        <p class="body">Mới một buổi thôi mà anh đã phải dựng cả một bầu trời để kể. Anh muốn có
+        <p class="body" id="askLead">Mới một buổi thôi mà anh đã phải dựng cả một bầu trời để kể. Anh muốn có
         thêm cái để đếm tiếp — nên anh hỏi thẳng: mình đi chơi buổi nữa nhé? Em chọn ngày, chọn giờ,
         muốn dặn gì thì dặn. Còn lại anh lo.</p>
         <div class="ask-row" id="askRow">
@@ -1367,6 +1367,7 @@ function renderHen(){
   document.getElementById('hudNextV').textContent =
     henData.date.slice(8) + '.' + henData.date.slice(5, 7) + (henData.time ? ' · ' + henData.time : '');
   document.getElementById('askEyebrow').textContent = 'Đã chốt · chờ tới ngày';
+  document.getElementById('askLead').textContent = ASK_LEAD;   /* lần sau hỏi lại thì lời mở đầu mới đúng */
   revealEl(henCard);
   tickHen();
 }
@@ -1529,7 +1530,7 @@ document.getElementById('btnYes').addEventListener('click', () => {
   openPlan();
   if (starsAPI){ starsAPI.setForm(2); starsAPI.shock(); }
 });
-document.getElementById('dEdit').addEventListener('click', openPlan);
+document.getElementById('dEdit').addEventListener('click', replayAsk);
 dJump.addEventListener('click', () => {
   document.getElementById('act-date').scrollIntoView({ behavior: 'smooth', block: 'center' });
 });
@@ -1579,22 +1580,43 @@ document.getElementById('dShare').addEventListener('click', async () => {
    Mở `index.html#reset` (hoặc gõ `resetHen()` trong Console) là trang quên lời hẹn đã
    lưu và hỏi lại từ đầu — nút TỪ CHỐI cũng về đúng chỗ cũ, coi như chưa ai đụng vào.
    Cố ý KHÔNG làm thành nút trên trang: để đó thì có ngày Vy bấm nhầm mất lời hẹn. */
+/* Kéo câu hỏi về nguyên trạng: nút TỪ CHỐI đứng lại chỗ cũ trong hàng, hết run hết
+   nghiêng, quên luôn chuyện đã chạy mấy lần. Dùng chung cho cả `resetHen` lẫn nút
+   "Đổi lịch" — hai chỗ mà lệch nhau một dòng là có chỗ nút không chịu quay về. */
+function restoreAsk(){
+  fledCount = 0;
+  fleeAt = -1e9;
+  clearTimeout(fleeTimer);
+  noRect = null;
+  btnNo.classList.remove('loose', 'gone', 'shy', 'dash');
+  btnNo.removeAttribute('style');                       /* bỏ hết left/top/width/--rot/--sc đã gắn tay */
+  askNote.classList.remove('on');
+  askRow.classList.remove('done');
+  askBox.hidden = false;
+  planBox.hidden = true;  planBox.classList.remove('in');
+}
+
+/* ---------- Đổi lịch = chơi lại từ câu hỏi ----------
+   Bấm "Đổi lịch" không mở thẳng ô chọn ngày nữa mà hỏi lại từ đầu, để ai muốn xem
+   lại trò nút chạy trốn thì cứ xem. Lời hẹn cũ KHÔNG mất: thẻ vẫn nằm ngay dưới,
+   không trả lời tiếp thì mọi thứ y nguyên. */
+const ASK_LEAD = document.getElementById('askLead').textContent;
+function replayAsk(){
+  restoreAsk();
+  document.getElementById('askLead').textContent =
+    'Lịch cũ vẫn còn nguyên ở dưới nhé. Muốn đổi thì mình làm lại từ đầu thôi — ' +
+    'vẫn đúng hai cái nút ấy, và vẫn chỉ bấm được một cái.';
+  document.getElementById('askEyebrow').textContent = 'Đổi lịch · hỏi lại từ đầu';
+  document.getElementById('act-date').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function resetHen(){
   henData = null;
   try { localStorage.removeItem(HEN_KEY); } catch (e){}
   if (SYNC_URL) askServer({ method: 'DELETE' });        /* xoá luôn trên máy chủ, không thì lát nó kéo về */
 
-  fledCount = 0;
-  fleeAt = -1e9;
-  clearTimeout(fleeTimer);
-  noRect = null;
-  btnNo.classList.remove('loose', 'gone');
-  btnNo.removeAttribute('style');                       /* bỏ hết left/top/width/transform đã gắn tay */
-  askNote.classList.remove('on');
-  askRow.classList.remove('done');
-  askBox.hidden = false;
-
-  planBox.hidden = true;  planBox.classList.remove('in');
+  restoreAsk();
+  document.getElementById('askLead').textContent = ASK_LEAD;
   henCard.hidden = true;  henCard.classList.remove('in');
   dJump.hidden = true;
   hudNext.classList.remove('on');

@@ -66,6 +66,13 @@
 
 ### 2026-09-19 — Sửa chương lời mời theo góp ý
 
+- **"Đổi lịch" giờ quay về câu hỏi** thay vì mở thẳng ô chọn ngày — ai muốn xem lại trò nút
+  chạy trốn thì cứ bấm. Lời hẹn cũ KHÔNG mất: thẻ vẫn nằm ngay dưới câu hỏi, bỏ dở giữa chừng
+  thì mọi thứ y nguyên; bấm Đồng ý thì ô chọn ngày vẫn điền sẵn lịch cũ. Lời mở đầu đổi sang
+  câu dành cho lần chơi lại, chốt xong tự trả về câu gốc.
+  Phần kéo nút TỪ CHỐI về chỗ cũ gom thành `restoreAsk()` dùng chung với `resetHen()` —
+  hai chỗ mà lệch nhau một dòng là có chỗ nút không chịu quay về.
+
 - Bỏ chữ *(để trống cũng được)* ở ô lời nhắn.
 - **Đăng bản mới lên link** (bản 13). Link đã có từ trước, nên chỉ đăng đè, không tạo link mới.
 
