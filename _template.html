@@ -268,30 +268,86 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
 .cta.yes:hover{border-color:rgba(255,170,196,.85);
   box-shadow:0 0 0 1px rgba(255,158,186,.12),0 18px 54px -22px rgba(255,120,160,.62)}
 
+/* Hai nút ở câu hỏi này là chỗ duy nhất cả trang cần người xem ra tay, nên phải to
+   và sáng hơn hẳn nút thường — và phải tự sáng, không trông chờ vào nền phía sau.
+   Chỉ nổi trong #askRow; nút "Chốt luôn" và nút cuối trang vẫn giữ nguyên nét cũ. */
+#askRow{gap:18px;margin-top:40px;min-height:74px}
+#askRow .cta.yes,#askRow .btn-no{
+  font-size:13px;font-weight:500;letter-spacing:.34em;padding:23px 44px 22px;
+  border-width:1px;border-radius:2px}
+#askRow .cta.yes{
+  color:#fff;border-color:rgba(255,170,196,.92);
+  background:linear-gradient(140deg,rgba(255,132,172,.30),rgba(255,96,142,.14) 58%,rgba(255,150,120,.16));
+  box-shadow:0 0 0 1px rgba(255,158,186,.20),0 20px 58px -22px rgba(255,104,150,.85),
+             inset 0 1px 0 rgba(255,255,255,.14);
+  animation:yesPulse 3.4s ease-in-out infinite}
+/* animation thắng khai báo thường -> phải tắt nhịp thở thì bóng lúc rê vào mới ăn */
+#askRow .cta.yes:hover{animation:none;transform:translateY(-2px);
+  box-shadow:0 0 0 1px rgba(255,180,205,.4),0 26px 70px -20px rgba(255,104,150,1),
+             inset 0 1px 0 rgba(255,255,255,.2)}
+#askRow .cta.yes svg{width:15px;height:15px}
+@keyframes yesPulse{
+  0%,100%{box-shadow:0 0 0 1px rgba(255,158,186,.20),0 20px 58px -22px rgba(255,104,150,.85),
+                     inset 0 1px 0 rgba(255,255,255,.14)}
+  50%    {box-shadow:0 0 0 1px rgba(255,170,196,.34),0 24px 66px -20px rgba(255,104,150,1),
+                     inset 0 1px 0 rgba(255,255,255,.18)}
+}
+/* Nút từ chối cũng phải rõ mặt chữ — nó còn bay qua chỗ sao sáng, nền mờ là mất chữ */
+#askRow .btn-no{
+  color:#d7e7f5;border-color:rgba(132,196,226,.62);
+  background:linear-gradient(150deg,rgba(14,30,48,.92),rgba(9,19,32,.86));
+  box-shadow:0 0 0 1px rgba(120,190,215,.10),0 18px 48px -24px rgba(0,0,0,.9);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+
 /* nút TỪ CHỐI: lúc đầu nằm trong hàng cho cân, vừa bị rê tới gần là nhảy sang
    position:fixed để chạy khắp màn hình mà không kéo lệch bố cục của cả chương.
-   Phải NHÌN THẤY nó chạy, nên cho trượt — nhưng trượt nhanh (.26s) và mỗi lần chỉ
-   chạy được sau một nhịp nghỉ, để mắt kịp bắt mà tay thì không. */
+   Phải NHÌN THẤY nó chạy, nên cho trượt hẳn .46s, và mỗi cú chỉ đi một quãng vừa phải
+   trong màn hình chứ không bắn thẳng sang góc đối diện — mắt đuổi kịp đường bay.
+   Bấm được cũng chẳng sao: cả pointerdown lẫn click đều bị chặn ở JS. */
 .btn-no{
   display:inline-flex;align-items:center;cursor:default;
   font-family:var(--hud);font-weight:400;font-size:11.5px;letter-spacing:.36em;text-transform:uppercase;
   color:var(--mute);background:rgba(10,20,34,.35);
   border:1px solid var(--line);border-radius:1px;padding:19px 34px 18px;
-  transition:left .26s cubic-bezier(.35,.9,.25,1.05),top .26s cubic-bezier(.35,.9,.25,1.05),
-             transform .34s cubic-bezier(.2,.9,.3,1.4),opacity .5s ease;
+  /* nghiêng người + co người để riêng ra hai biến, vì mấy đoạn chạy/run bên dưới
+     cũng phải dùng lại đúng hai giá trị này — đặt thẳng vào transform là đá nhau */
+  --rot:0deg;--sc:1;
+  transform:rotate(var(--rot)) scale(var(--sc));
+  transition:left .46s cubic-bezier(.28,.72,.24,1),top .46s cubic-bezier(.28,.72,.24,1),
+             transform .4s cubic-bezier(.2,.9,.3,1.4),opacity .5s ease;
   user-select:none;-webkit-user-select:none
 }
 .btn-no.loose{position:fixed;z-index:7;margin:0}
 .btn-no.gone{opacity:0;transform:scale(.3) rotate(-14deg);pointer-events:none}
+
+/* Tay còn ở xa xa là đã run lẩy bẩy — báo trước rằng nó sắp bỏ chạy, và trông rất tội */
+@keyframes noShiver{
+  0%,100%{transform:translate(0,0) rotate(var(--rot)) scale(var(--sc))}
+  25%    {transform:translate(-2.5px,1px) rotate(calc(var(--rot) - 3deg)) scale(var(--sc))}
+  50%    {transform:translate(0,-1.5px) rotate(var(--rot)) scale(var(--sc))}
+  75%    {transform:translate(2.5px,1px) rotate(calc(var(--rot) + 3deg)) scale(var(--sc))}
+}
+.btn-no.shy{animation:noShiver .34s ease-in-out infinite}
+/* Cú phóng đi: nhún xuống lấy đà rồi bật lên, kiểu chạy vắt chân lên cổ */
+@keyframes noScurry{
+  0%  {transform:translateY(2px) rotate(var(--rot)) scaleX(calc(var(--sc)*1.18)) scaleY(calc(var(--sc)*.84))}
+  28% {transform:translateY(-12px) rotate(var(--rot)) scaleX(calc(var(--sc)*.9)) scaleY(calc(var(--sc)*1.14))}
+  62% {transform:translateY(-5px) rotate(var(--rot)) scale(var(--sc))}
+  82% {transform:translateY(2px) rotate(var(--rot)) scaleX(calc(var(--sc)*1.06)) scaleY(calc(var(--sc)*.95))}
+  100%{transform:translateY(0) rotate(var(--rot)) scale(var(--sc))}
+}
+.btn-no.dash{animation:noScurry .48s cubic-bezier(.3,.8,.3,1)}
 
 .lewlew{position:fixed;z-index:8;pointer-events:none;white-space:nowrap;
   font-family:var(--voice);font-style:italic;font-weight:400;
   color:#ffd2de;text-shadow:0 0 22px rgba(255,140,175,.55);
   animation:lewfly 1.25s cubic-bezier(.2,.7,.2,1) forwards}
 @keyframes lewfly{
-  0%{opacity:0;transform:translate(-50%,-50%) scale(.6) rotate(var(--rot,0deg))}
-  22%{opacity:1;transform:translate(-50%,-64%) scale(1.14) rotate(var(--rot,0deg))}
-  100%{opacity:0;transform:translate(-50%,-190%) scale(1) rotate(var(--rot,0deg))}
+  0%  {opacity:0;transform:translate(-50%,-50%) scale(.5) rotate(var(--rot,0deg))}
+  18% {opacity:1;transform:translate(-50%,-70%) scale(1.22) rotate(calc(var(--rot,0deg) - 6deg))}
+  34% {opacity:1;transform:translate(-50%,-88%) scale(.98) rotate(calc(var(--rot,0deg) + 5deg))}
+  52% {opacity:.95;transform:translate(-50%,-116%) scale(1.08) rotate(calc(var(--rot,0deg) - 3deg))}
+  100%{opacity:0;transform:translate(-50%,-205%) scale(1) rotate(var(--rot,0deg))}
 }
 .ask-note{font-family:var(--hud);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--rose);margin:20px 0 0;opacity:0;transition:opacity .9s ease}
@@ -1322,8 +1378,8 @@ setInterval(tickHen, 1000);
    chỉ chặn click thôi thì ngón tay vẫn "chạm trúng" được một nhịp. */
 let fledCount = 0;
 let fleeAt = -1e9, fleeTimer = 0;
-const FLEE_GAP = 300;                                /* hai cú chạy cách nhau ít nhất 0,3s */
-const SLIDE_MS = 320;                                /* thời gian nó còn đang trượt */
+const FLEE_GAP = 430;                                /* để cú trước trượt xong hẳn rồi mới chạy tiếp */
+const SLIDE_MS = 480;                                /* thời gian nó còn đang trượt */
 const lastPtr = { x: innerWidth / 2, y: innerHeight / 2 };
 
 function lewlew(x, y){
@@ -1368,24 +1424,40 @@ function flee(){
   }
   fledCount++;
   if (fledCount >= 8){
+    btnNo.classList.remove('shy', 'dash');          /* animation thắng .gone -> phải gỡ, không thì nó không biến mất */
     btnNo.classList.add('gone');
     askNote.classList.add('on');
     return;
   }
+  /* Chọn chỗ đến: bắn thẳng sang góc đối diện thì mắt không kịp thấy đường bay, nên
+     giới hạn quãng đường mỗi cú; trong số chỗ còn lại mới lấy chỗ xa tay nhất, và bỏ
+     những chỗ vẫn còn kề ngay tay (đến nơi lại phải chạy tiếp, trông như giật). */
   const M = 12, w = r.width, h = r.height;
   const maxX = Math.max(M, innerWidth - w - M), maxY = Math.max(M, innerHeight - h - M);
-  let bx = M, by = M, bd = -1;
-  for (let i = 0; i < 28; i++){                     /* thử 28 chỗ, lấy chỗ xa tay nhất */
+  const cx = r.left + w / 2, cy = r.top + h / 2;
+  const maxTravel = Math.min(560, Math.hypot(innerWidth, innerHeight) * 0.42);
+  let bx = M, by = M, bd = -1, fx = M, fy = M, fd = -1;
+  for (let i = 0; i < 40; i++){
     const x = M + Math.random() * (maxX - M);
     const y = M + Math.random() * (maxY - M);
     const dx = x + w / 2 - lastPtr.x, dy = y + h / 2 - lastPtr.y;
     const d = dx * dx + dy * dy;
+    if (d > fd){ fd = d; fx = x; fy = y; }          /* đường lui: màn quá hẹp thì lấy chỗ xa nhất */
+    if (d < 25600) continue;                        /* còn trong 160px quanh tay -> bỏ */
+    if (Math.hypot(x + w / 2 - cx, y + h / 2 - cy) > maxTravel) continue;
     if (d > bd){ bd = d; bx = x; by = y; }
   }
+  if (bd < 0){ bx = fx; by = fy; }
+  /* nghiêng người về phía đang chạy, chạy càng nhiều càng co rúm lại cho tội nghiệp */
+  const lean = (bx > r.left ? 1 : -1) * (7 + Math.random() * 5);
+  btnNo.style.setProperty('--rot', lean.toFixed(1) + 'deg');
+  btnNo.style.setProperty('--sc', Math.max(0.62, 1 - fledCount * 0.05).toFixed(2));
   btnNo.style.left = bx + 'px';
   btnNo.style.top = by + 'px';
-  btnNo.style.transform = 'rotate(' + (Math.random() * 16 - 8).toFixed(1) + 'deg) scale(' +
-                          Math.max(0.62, 1 - fledCount * 0.05).toFixed(2) + ')';
+
+  btnNo.classList.remove('shy', 'dash');
+  void btnNo.offsetWidth;                           /* bắt trình duyệt quên animation cũ, không thì cú sau không nhún */
+  btnNo.classList.add('dash');
   noRect = null;
 }
 
@@ -1400,19 +1472,30 @@ function noBox(){
   if (!noRect || performance.now() - fleeAt < SLIDE_MS) noRect = btnNo.getBoundingClientRect();
   return noRect;
 }
-function nearNo(){
-  if (btnNo.classList.contains('gone') || askBox.hidden) return false;
+function noDist(){
   const r = noBox();
   const dx = Math.max(r.left - lastPtr.x, 0, lastPtr.x - r.right);
   const dy = Math.max(r.top - lastPtr.y, 0, lastPtr.y - r.bottom);
-  return dx * dx + dy * dy < 12100;                  /* tới gần 110px là chạy */
+  return Math.sqrt(dx * dx + dy * dy);
+}
+function nearNo(){
+  if (btnNo.classList.contains('gone') || askBox.hidden) return false;
+  return noDist() < 110;                             /* tới gần 110px là chạy */
 }
 
 addEventListener('pointermove', e => {
   lastPtr.x = e.clientX; lastPtr.y = e.clientY;
-  if (nearNo()) flee();
+  if (btnNo.classList.contains('gone') || askBox.hidden) return;
+  const d = noDist();
+  if (d < 110){ flee(); return; }
+  /* còn cách một quãng thì chưa chạy vội, mới chỉ đứng run — nhìn là biết nó sắp bỏ chạy */
+  btnNo.classList.toggle('shy', d < 240 && !btnNo.classList.contains('dash'));
 }, { passive: true });
 
+/* nhún xong thì gỡ lớp .dash ra, không thì nó kẹt mãi và nút hết biết run */
+btnNo.addEventListener('animationend', e => {
+  if (e.animationName === 'noScurry') btnNo.classList.remove('dash');
+});
 btnNo.addEventListener('pointerdown', e => { e.preventDefault(); flee(); });
 btnNo.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); flee(); });
 btnNo.addEventListener('focus', flee);

@@ -65,6 +65,17 @@
 
 ### 2026-09-19 — Sửa chương lời mời theo góp ý
 
+- **Hai nút nổi hẳn lên** (chỉ trong `#askRow`, nút khác cả trang giữ nguyên): to hơn (13px),
+  `Đồng ý` có nền chuyển sắc hồng + quầng sáng + nhịp thở nhẹ; `Từ chối` nền đặc + viền xanh sáng
+  để bay qua chỗ sao sáng vẫn đọc được mặt chữ.
+- **Chạy chậm lại cho nhìn được**: trượt `.46s` (trước `.26s`), và mỗi cú chỉ đi một quãng vừa phải
+  (≤ 560px, hoặc 42% đường chéo màn hình) chứ không bắn thẳng sang góc đối diện — đo được 25 vị trí
+  trung gian qua 51 khung hình. Nhịp nghỉ nâng lên 430ms cho khớp, để cú trước trượt xong hẳn.
+- **Cho nó ra dáng chạy trốn**: tay còn cách ~240px là nó đã **đứng run lẩy bẩy** (`.shy`), tới
+  110px mới bỏ chạy — cú phóng có nhún lấy đà rồi bật lên (`.dash`, squash & stretch), nghiêng
+  người về hướng chạy, chạy càng nhiều càng co rúm lại. Chữ *lewlew* cũng nảy lò cò hơn.
+  Hai biến `--rot`/`--sc` tách riêng vì animation và transform đặt tay sẽ đá nhau.
+
 - **Xoá để thử lại**: mở `index.html#reset` (hoặc gõ `resetHen()` trong Console) là trang quên lời
   hẹn đã lưu, xoá luôn trên máy chủ nếu đã bật, và hỏi lại từ đầu — nút TỪ CHỐI về đúng chỗ cũ.
   Cố ý KHÔNG làm thành nút trên trang, để đó có ngày Vy bấm nhầm mất lời hẹn thật.
