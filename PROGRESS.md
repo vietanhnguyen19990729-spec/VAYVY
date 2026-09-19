@@ -4,8 +4,8 @@
 
 ## Tóm tắt nhanh
 
-- **Đang ở đâu**: bản v1 CHẠY ĐƯỢC, đã đủ để gửi. Toàn bộ trang nằm trong 1 file HTML duy nhất.
-- **Tiếp theo (ưu tiên)**: 1) dựng lại bộ build + cất ảnh/nhạc gốc · 2) gỡ phụ thuộc mạng (three.js, Google Fonts) để mở offline · 3) thêm chương mới theo `IDEAS.md`.
+- **Đang ở đâu**: bản v1 CHẠY ĐƯỢC, đã vá phần meta nên điện thoại giờ hiển thị đúng. Toàn bộ trang nằm trong 1 file HTML duy nhất, đã có git.
+- **Tiếp theo (ưu tiên)**: 1) **test thật trên điện thoại** (bản vá viewport chưa được kiểm trên máy thật) · 2) cất ảnh/nhạc gốc + viết `build.js` · 3) gỡ phụ thuộc mạng (three.js, Google Fonts) · 4) chòm sao kỷ niệm — xem `IDEAS.md` §3.1.
 - **Rủi ro lớn nhất**: KHÔNG còn ảnh gốc / nhạc gốc / script sinh bản đồ sao → hiện tại không tái tạo lại `index.html` được nếu muốn đổi ảnh.
 
 ## Cấu trúc thư mục
@@ -16,6 +16,7 @@
 | `index.html` | Bản đã nhúng asset (6,7 MB) — **FILE KẾT QUẢ, không sửa tay**, luôn sửa `_template.html` rồi build lại |
 | `PROGRESS.md` | File này |
 | `IDEAS.md` | Kế hoạch / ý tưởng làm tiếp |
+| `.gitattributes` | `* -text` — cấm git đổi byte file base64 6,7 MB |
 
 ## Đã làm được gì (v1)
 
@@ -40,16 +41,26 @@
 
 ## Còn thiếu / nợ kỹ thuật
 
-1. **Không có script build** — 4 placeholder trong `_template.html` hiện được thay bằng tay. Cần `build.js` + giữ lại `assets/` (ảnh gốc, mp3, script sinh starmap 6 byte/hạt: x,y int16 · độ sáng · độ xám).
-2. **Phụ thuộc Internet**: `three@0.160.0` từ jsdelivr + Google Fonts. Mất mạng là trang chỉ còn ảnh tĩnh.
-3. Chưa có git — mỗi lần sửa hỏng là không lùi lại được.
-4. `index.html` 6,7 MB (nhạc chiếm 5,6 MB) — mở bằng 4G khá lâu, chưa có màn chờ báo % tải.
-5. Chưa test thật trên máy điện thoại của Vy.
+1. ~~Thiếu doctype/charset/viewport~~ — **đã sửa 19.09.2026**.
+2. **Không có script build** — 4 placeholder trong `_template.html` hiện được thay bằng tay. Cần `build.js` + giữ lại `assets/` (ảnh gốc, mp3, script sinh starmap 6 byte/hạt: x,y int16 · độ sáng · độ xám).
+3. **Phụ thuộc Internet**: `three@0.160.0` từ jsdelivr + Google Fonts. Mất mạng là trang chỉ còn ảnh tĩnh.
+4. ~~Chưa có git~~ — **đã `git init` 19.09.2026**, 2 commit.
+5. `index.html` 6,7 MB (nhạc chiếm 5,6 MB) — mở bằng 4G khá lâu, chưa có màn chờ báo % tải.
+6. **Chưa test thật trên máy điện thoại của Vy** — việc cần làm ngay sau bản vá viewport.
 
 ## Nhật ký
 
+### 2026-09-19 — Vá meta cho điện thoại + dựng git
+- `git init`, 2 commit: `v1` (bản gốc) → bản vá. Kèm `.gitattributes` `* -text` để git không đụng byte file base64.
+- Thêm `<!doctype html>` · `<html lang="vi">` · `<meta charset>` · `<meta name="viewport" ...viewport-fit=cover>` · `theme-color`.
+  Trước đó thiếu `viewport` nên điện thoại dựng trang ở khổ giả 980px: 2 media query 620px/860px **không bao giờ chạy**, và
+  `isNarrow()` trả `false` khiến điện thoại gánh đủ 113.000 hạt thay vì 62.000.
+- Thêm `env(safe-area-inset-*)` cho HUD hai góc trên, thanh điều khiển và gợi ý mở nhạc (tai thỏ / thanh home).
+- Sửa **cả** `_template.html` lẫn `index.html`, đã kiểm 2 file vẫn khớp nhau và 3 khối base64 nguyên vẹn.
+- **Chưa test trên máy thật.**
+
 ### 2026-09-19 — Lập sổ tiến độ
-Đọc lại toàn bộ code v1, viết `PROGRESS.md` + `IDEAS.md`. Chưa sửa gì vào code.
+Đọc lại toàn bộ code v1, viết `PROGRESS.md` + `IDEAS.md`.
 
 ### ~2026-09-17/18 — v1 hoàn chỉnh
 Dựng xong bầu sao 4 hình thái, 3 chương, màn cao trào, nhạc. Đã build ra `index.html`.

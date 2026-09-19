@@ -5,20 +5,20 @@ Mỗi mục ghi rõ *tại sao đáng làm* và *nặng hay nhẹ*. Làm xong m�
 
 ---
 
-## 0. SỬA NGAY — trang đang thiếu 4 thẻ meta (nhẹ, ~5 phút, ảnh hưởng lớn nhất)
+## 0. ~~SỬA NGAY — thiếu thẻ meta~~ ✅ XONG 19.09.2026
 
 File hiện bắt đầu thẳng bằng `<title>`, **không có `<!doctype html>`, không `<meta charset>`, không `<meta name="viewport">`**.
 
 - Không có `viewport` ⇒ điện thoại dựng trang ở khổ giả 980px rồi thu nhỏ lại: chữ bé li ti, hai media query 620px/860px **không bao giờ chạy**, và `isNarrow()` (`innerWidth < 760`) trả `false` nên máy điện thoại vẫn phải gánh đủ 113.000 hạt thay vì 62.000 → nóng máy, tụt khung hình.
 - Không có `charset` ⇒ mở bằng `file://` có lúc ra chữ Việt lỗi font (mojibake).
 
-Đây là việc đáng làm trước mọi thứ khác: toàn bộ công sức responsive đã viết sẵn trong CSS hiện **không được kích hoạt trên điện thoại**.
+Đã thêm doctype/charset/viewport/theme-color + `env(safe-area-inset-*)`. **Còn lại: mở thử trên máy điện thoại thật để xác nhận.**
 
 ## 1. Nền móng — để còn sửa được lâu dài (nhẹ, nửa buổi)
 
 1. **Cất lại asset gốc** vào `assets/`: ảnh chân dung gốc, file nhạc gốc. Hiện chỉ còn bản base64 đã nhúng, muốn đổi ảnh là phải làm lại từ đầu.
 2. **Viết `build.js`**: đọc `_template.html`, sinh bản đồ sao từ ảnh (6 byte/hạt: x,y int16 · độ sáng · độ xám), nhúng nhạc + ảnh, tính `__ASPECT__`, ghi ra `index.html`. Có script này thì đổi ảnh/đổi nhạc chỉ còn 1 lệnh.
-3. **`git init`** + commit bản v1 ngay. Sửa hỏng còn lùi lại được.
+3. ~~**`git init`**~~ ✅ XONG — 2 commit, kèm `.gitattributes` `* -text`.
 4. **Gỡ phụ thuộc mạng**: tải `three.module.js` + 3 file postprocessing + 3 font `.woff2` về `vendor/`. Mất mạng thì trang vẫn chạy đủ — quan trọng nếu mở ở chỗ sóng yếu.
 
 ## 2. Làm MƯỢT
