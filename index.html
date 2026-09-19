@@ -1493,8 +1493,47 @@ document.getElementById('dShare').addEventListener('click', async () => {
   }
 });
 
+/* ---------- xoá sạch để thử lại ----------
+   Mở `index.html#reset` (hoặc gõ `resetHen()` trong Console) là trang quên lời hẹn đã
+   lưu và hỏi lại từ đầu — nút TỪ CHỐI cũng về đúng chỗ cũ, coi như chưa ai đụng vào.
+   Cố ý KHÔNG làm thành nút trên trang: để đó thì có ngày Vy bấm nhầm mất lời hẹn. */
+function resetHen(){
+  henData = null;
+  try { localStorage.removeItem(HEN_KEY); } catch (e){}
+  if (SYNC_URL) askServer({ method: 'DELETE' });        /* xoá luôn trên máy chủ, không thì lát nó kéo về */
+
+  fledCount = 0;
+  fleeAt = -1e9;
+  clearTimeout(fleeTimer);
+  noRect = null;
+  btnNo.classList.remove('loose', 'gone');
+  btnNo.removeAttribute('style');                       /* bỏ hết left/top/width/transform đã gắn tay */
+  askNote.classList.remove('on');
+  askRow.classList.remove('done');
+  askBox.hidden = false;
+
+  planBox.hidden = true;  planBox.classList.remove('in');
+  henCard.hidden = true;  henCard.classList.remove('in');
+  dJump.hidden = true;
+  hudNext.classList.remove('on');
+  dDate.value = ''; dTime.value = ''; dMsg.value = '';
+  henNote('');
+  document.getElementById('askEyebrow').textContent = 'Đề nghị · chờ em trả lời';
+
+  /* mở bằng file:// thì replaceState có máy chặn -> phải có đường lui, không thì
+     #reset nằm lại trên thanh địa chỉ, tải lại phát nào xoá phát đó */
+  try { history.replaceState(null, '', location.pathname + location.search); }
+  catch (e){ location.hash = ''; }
+  return 'Đã xoá lời hẹn — trang hỏi lại từ đầu.';
+}
+window.resetHen = resetHen;
+addEventListener('hashchange', () => {                  /* gõ thẳng #reset vào thanh địa chỉ cũng ăn */
+  if (/^#(reset|lam-lai)$/i.test(location.hash)) resetHen();
+});
+
 /* ---------- nạp lúc mở trang ---------- */
 (function initHen(){
+  if (/^#(reset|lam-lai)$/i.test(location.hash)){ resetHen(); return; }
   const m = location.hash.match(/hen=([A-Za-z0-9_-]+)/);
   const fromLink = m ? unpackHen(m[1]) : null;
   const fromLocal = readLocalHen();

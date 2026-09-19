@@ -65,6 +65,10 @@
 
 ### 2026-09-19 — Sửa chương lời mời theo góp ý
 
+- **Xoá để thử lại**: mở `index.html#reset` (hoặc gõ `resetHen()` trong Console) là trang quên lời
+  hẹn đã lưu, xoá luôn trên máy chủ nếu đã bật, và hỏi lại từ đầu — nút TỪ CHỐI về đúng chỗ cũ.
+  Cố ý KHÔNG làm thành nút trên trang, để đó có ngày Vy bấm nhầm mất lời hẹn thật.
+
 - **Nền khó đọc**: chữ chương này nằm đúng chỗ hình trái tim sáng nhất. Lót một mảng tối toả dần
   (`#act-date .wrap::before`, `z-index:-1`, không mép cứng) — đọc rõ mà vẫn thấy sao phía sau.
 - **Phải NHÌN THẤY nút chạy**: trước đây nút đổi chỗ tức thì (cố ý, sợ trượt mượt thì bị bắt) nên

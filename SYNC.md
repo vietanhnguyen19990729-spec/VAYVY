@@ -77,6 +77,13 @@ Trang nặng 6,4 MB (nhạc chiếm 4 MB) nên lần mở đầu bằng 4G hơi 
 2. Mở trang trên máy khác → phải tự hiện thẻ hẹn, và nút **Hẹn tiếp theo** xuất hiện
    ở thanh dưới cùng.
 
+## Thử đi thử lại
+
+Chốt xong rồi mà muốn thử lại từ đầu: mở **`index.html#reset`** (thêm `#reset` vào cuối địa chỉ).
+Trang sẽ quên lời hẹn đã lưu — kể cả bản trên máy chủ — và hỏi lại như chưa có gì.
+Gõ `resetHen()` trong Console cũng ra kết quả y hệt. Cố ý không làm thành nút trên trang,
+để đó thì có ngày bấm nhầm mất lời hẹn thật.
+
 ## Nếu hỏng thì hỏng kiểu gì
 
 Toàn bộ phần mạng đều **fail-soft** — mất mạng hay Firebase lỗi thì:
