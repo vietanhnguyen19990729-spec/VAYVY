@@ -30,7 +30,7 @@ File hiện bắt đầu thẳng bằng `<title>`, **không có `<!doctype html>
 
 ## 2b. ✅ XONG 19.09.2026 — Chương “Lời mời hẹn buổi tiếp theo”
 
-Nút KHÔNG chạy trốn + chữ *lewlew*, bấm CÓ thì chọn ngày/giờ/lời nhắn, chốt xong hiện thẻ hẹn
+Nút TỪ CHỐI chạy trốn + chữ *lewlew*, bấm ĐỒNG Ý thì chọn ngày/giờ/lời nhắn, chốt xong hiện thẻ hẹn
 có đếm ngược, xem lại qua nút **Hẹn tiếp theo**. Còn lại: bật đồng bộ theo `SYNC.md` thì
 lời hẹn tự hiện trên máy anh, khỏi phải gửi tay.
 

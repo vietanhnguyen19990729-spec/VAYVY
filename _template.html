@@ -248,6 +248,17 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
    của thuộc tính hidden -> phải ép lại, không thì nút ẩn vẫn hiện. */
 [hidden]{display:none!important}
 
+/* Chữ của chương này nằm đúng chỗ bầu sao sáng nhất (hình trái tim) nên trôi mất nét.
+   Lót một mảng tối toả dần, KHÔNG có mép cứng, đủ đọc mà vẫn thấy sao phía sau. */
+#act-date .wrap{position:relative}
+#act-date .wrap::before{
+  content:"";position:absolute;z-index:-1;pointer-events:none;
+  left:-8vw;right:-8vw;top:-12vh;bottom:-14vh;
+  background:
+    radial-gradient(74% 64% at 30% 52%, rgba(3,6,12,.90), rgba(3,6,12,.66) 42%,
+                    rgba(3,6,12,.30) 68%, rgba(3,6,12,0) 86%);
+}
+
 .ask{max-width:56ch}
 .ask-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:34px;min-height:60px;
   transition:opacity .6s ease}
@@ -257,16 +268,17 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
 .cta.yes:hover{border-color:rgba(255,170,196,.85);
   box-shadow:0 0 0 1px rgba(255,158,186,.12),0 18px 54px -22px rgba(255,120,160,.62)}
 
-/* nút KHÔNG: lúc đầu nằm trong hàng cho cân, vừa bị rê tới gần là nhảy sang
+/* nút TỪ CHỐI: lúc đầu nằm trong hàng cho cân, vừa bị rê tới gần là nhảy sang
    position:fixed để chạy khắp màn hình mà không kéo lệch bố cục của cả chương.
-   Vị trí đổi TỨC THÌ (transition chỉ nhận transform) — cho nó trượt mượt thì
-   rê chuột nhanh là bắt được, mất cả trò. */
+   Phải NHÌN THẤY nó chạy, nên cho trượt — nhưng trượt nhanh (.26s) và mỗi lần chỉ
+   chạy được sau một nhịp nghỉ, để mắt kịp bắt mà tay thì không. */
 .btn-no{
   display:inline-flex;align-items:center;cursor:default;
   font-family:var(--hud);font-weight:400;font-size:11.5px;letter-spacing:.36em;text-transform:uppercase;
   color:var(--mute);background:rgba(10,20,34,.35);
   border:1px solid var(--line);border-radius:1px;padding:19px 34px 18px;
-  transition:transform .34s cubic-bezier(.2,.9,.3,1.4),opacity .5s ease;
+  transition:left .26s cubic-bezier(.35,.9,.25,1.05),top .26s cubic-bezier(.35,.9,.25,1.05),
+             transform .34s cubic-bezier(.2,.9,.3,1.4),opacity .5s ease;
   user-select:none;-webkit-user-select:none
 }
 .btn-no.loose{position:fixed;z-index:7;margin:0}
@@ -474,8 +486,8 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
         thêm cái để đếm tiếp — nên anh hỏi thẳng: mình đi chơi buổi nữa nhé? Em chọn ngày, chọn giờ,
         muốn dặn gì thì dặn. Còn lại anh lo.</p>
         <div class="ask-row" id="askRow">
-          <button type="button" class="cta yes" id="btnYes"><svg viewBox="0 0 32 29" aria-hidden="true"><path fill="#ffb49e" d="M16 29S0 19.5 0 9.5A8.6 8.6 0 0 1 16 5 8.6 8.6 0 0 1 32 9.5C32 19.5 16 29 16 29z"/></svg><span>Có</span></button>
-          <button type="button" class="btn-no" id="btnNo">Không</button>
+          <button type="button" class="cta yes" id="btnYes"><svg viewBox="0 0 32 29" aria-hidden="true"><path fill="#ffb49e" d="M16 29S0 19.5 0 9.5A8.6 8.6 0 0 1 16 5 8.6 8.6 0 0 1 32 9.5C32 19.5 16 29 16 29z"/></svg><span>Đồng ý</span></button>
+          <button type="button" class="btn-no" id="btnNo">Từ chối</button>
         </div>
         <p class="ask-note" id="askNote">Nút ấy chạy mất rồi — chỉ còn đúng một đường thôi ♥</p>
       </div>
@@ -1305,10 +1317,13 @@ function renderHen(){
 }
 setInterval(tickHen, 1000);
 
-/* ---------- nút KHÔNG: không bao giờ bấm được ----------
+/* ---------- nút TỪ CHỐI: không bao giờ bấm được ----------
    Chặn ở CẢ pointerdown lẫn click, vì trên điện thoại pointerdown chạy trước —
    chỉ chặn click thôi thì ngón tay vẫn "chạm trúng" được một nhịp. */
 let fledCount = 0;
+let fleeAt = -1e9, fleeTimer = 0;
+const FLEE_GAP = 300;                                /* hai cú chạy cách nhau ít nhất 0,3s */
+const SLIDE_MS = 320;                                /* thời gian nó còn đang trượt */
 const lastPtr = { x: innerWidth / 2, y: innerHeight / 2 };
 
 function lewlew(x, y){
@@ -1325,13 +1340,31 @@ function lewlew(x, y){
 
 function flee(){
   if (btnNo.classList.contains('gone')) return;
+
+  /* Nhịp nghỉ đặt Ở ĐÂY, tính từ lần chạy THẬT gần nhất — không phải ở pointermove.
+     Nếu hãm ngay tại pointermove thì một nhát rê nhanh sẽ bị sự kiện đầu (con trỏ
+     còn ở xa) ăn mất suất, nuốt luôn sự kiện cuối đang nằm trên nút -> nút đứng im.
+     Lần gọi bị hoãn thì hẹn lại, lúc đó đo lại xem tay còn kề bên không rồi mới chạy. */
+  const now = performance.now();
+  if (now - fleeAt < FLEE_GAP){
+    clearTimeout(fleeTimer);
+    fleeTimer = setTimeout(() => { if (nearNo()) flee(); }, FLEE_GAP - (now - fleeAt));
+    return;
+  }
+  fleeAt = now;
+
   const r = btnNo.getBoundingClientRect();
   lewlew(r.left + r.width / 2, r.top + r.height / 2);
 
   if (!btnNo.classList.contains('loose')){
     btnNo.style.width = r.width + 'px';
     btnNo.style.height = r.height + 'px';
+    /* chốt đúng chỗ đang đứng TRƯỚC khi đổi sang fixed, rồi ép trình duyệt tính lại —
+       không thì cú chạy đầu tiên không có điểm xuất phát, nó nhảy cóc chứ không trượt */
+    btnNo.style.left = r.left + 'px';
+    btnNo.style.top = r.top + 'px';
     btnNo.classList.add('loose');
+    void btnNo.offsetWidth;
   }
   fledCount++;
   if (fledCount >= 8){
@@ -1356,22 +1389,28 @@ function flee(){
   noRect = null;
 }
 
-/* Không được hãm theo thời gian ở đây: một nhát rê chuột nhanh bắn ra cả chục
-   pointermove trong vài mili giây, sự kiện ĐẦU (con trỏ còn ở xa) sẽ ăn mất suất và
-   nuốt luôn sự kiện CUỐI đang nằm ngay trên nút -> con trỏ đậu lên mà nút đứng im.
-   Thay bằng nhớ sẵn khung của nút, chỉ đo lại khi nó thực sự có thể đã dịch. */
+/* Khung của nút được nhớ lại cho đỡ tốn, nhưng TRONG LÚC nó đang trượt thì phải đo
+   thật từng lần — có thế mới biết tay đã đuổi kịp giữa đường hay chưa. */
 let noRect = null;
 const dropNoRect = () => { noRect = null; };
 addEventListener('scroll', dropNoRect, { passive: true });
 addEventListener('resize', dropNoRect, { passive: true });
 
+function noBox(){
+  if (!noRect || performance.now() - fleeAt < SLIDE_MS) noRect = btnNo.getBoundingClientRect();
+  return noRect;
+}
+function nearNo(){
+  if (btnNo.classList.contains('gone') || askBox.hidden) return false;
+  const r = noBox();
+  const dx = Math.max(r.left - lastPtr.x, 0, lastPtr.x - r.right);
+  const dy = Math.max(r.top - lastPtr.y, 0, lastPtr.y - r.bottom);
+  return dx * dx + dy * dy < 12100;                  /* tới gần 110px là chạy */
+}
+
 addEventListener('pointermove', e => {
   lastPtr.x = e.clientX; lastPtr.y = e.clientY;
-  if (btnNo.classList.contains('gone') || askBox.hidden) return;
-  if (!noRect) noRect = btnNo.getBoundingClientRect();
-  const dx = Math.max(noRect.left - e.clientX, 0, e.clientX - noRect.right);
-  const dy = Math.max(noRect.top - e.clientY, 0, e.clientY - noRect.bottom);
-  if (dx * dx + dy * dy < 8100) flee();              /* tới gần 90px là chạy */
+  if (nearNo()) flee();
 }, { passive: true });
 
 btnNo.addEventListener('pointerdown', e => { e.preventDefault(); flee(); });
@@ -1384,7 +1423,7 @@ addEventListener('resize', () => {                   /* xoay máy xong đừng �
   btnNo.style.top = Math.min(parseFloat(btnNo.style.top) || 0, Math.max(12, innerHeight - r.height - 12)) + 'px';
 }, { passive: true });
 
-/* ---------- nút CÓ ---------- */
+/* ---------- nút ĐỒNG Ý ---------- */
 function nextSaturday(){
   const d = new Date();
   d.setHours(0, 0, 0, 0);

@@ -11,7 +11,7 @@
 vào ổ đĩa máy Vy (`file:///C:/Users/.../index.html`) — máy anh mở không ra. Phải có một địa chỉ
 chung trên mạng thì cả link chia sẻ lẫn Firebase mới có ý nghĩa.
 
-Chưa làm gì cả thì tính năng **vẫn chạy đủ trên máy Vy**: bấm CÓ, chọn ngày giờ, viết lời nhắn,
+Chưa làm gì cả thì tính năng **vẫn chạy đủ trên máy Vy**: bấm ĐỒNG Ý, chọn ngày giờ, viết lời nhắn,
 trang lưu và hiện thẻ hẹn có đếm ngược — chỉ là chưa sang được máy anh.
 
 ---
@@ -71,7 +71,7 @@ Trang nặng 6,4 MB (nhạc chiếm 4 MB) nên lần mở đầu bằng 4G hơi 
 
 ## Kiểm lại xem đã chạy chưa
 
-1. Mở trang trên điện thoại, bấm CÓ → chọn ngày → **Chốt luôn**.
+1. Mở trang trên điện thoại, bấm ĐỒNG Ý → chọn ngày → **Chốt luôn**.
    Dòng chữ nhỏ dưới thẻ phải hiện **"Đã gửi cho anh rồi ♥"**.
    Nếu hiện *"Chưa gửi lên được"* → sai `SYNC_URL`, hoặc chưa Publish Rules, hoặc mất mạng.
 2. Mở trang trên máy khác → phải tự hiện thẻ hẹn, và nút **Hẹn tiếp theo** xuất hiện

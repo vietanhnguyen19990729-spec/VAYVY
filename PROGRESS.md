@@ -4,7 +4,7 @@
 
 ## Tóm tắt nhanh
 
-- **Đang ở đâu**: v2 — đã có chương **Lời mời hẹn buổi tiếp theo**. Có git, có `build.js`, asset gốc đã cứu lại.
+- **Đang ở đâu**: v2.1 — chương **Lời mời hẹn buổi tiếp theo** (nút `Đồng ý`/`Từ chối`, đã sửa nền + đường chạy). Có git, có `build.js`, asset gốc đã cứu lại.
 - **Tiếp theo (ưu tiên)**: 1) **test thật trên điện thoại** · 2) bật đồng bộ Firebase theo `SYNC.md` (cần anh bấm vài cái trong tài khoản Google) · 3) gỡ phụ thuộc mạng (three.js, Google Fonts).
 - **Rủi ro lớn nhất**: trang hiện **chết hoàn toàn nếu không có Internet** — `import * as THREE from 'three'` lấy từ CDN, import hỏng là cả file JS không chạy, mất luôn cả chương lời mời.
 
@@ -40,10 +40,10 @@
 - Âm thanh chuông/riser/shimmer tổng hợp bằng oscillator (không dùng file), nhạc nền nhúng sẵn, có gợi ý "chạm để mở nhạc" khi trình duyệt chặn autoplay.
 
 **Chương 4 · Lời mời hẹn buổi tiếp theo** (v2)
-- Hỏi “Buổi tiếp theo, em nhé?” với 2 nút. Nút **KHÔNG** rê tới gần 90px là nhảy đi chỗ khác
+- Hỏi “Buổi tiếp theo, em nhé?” với 2 nút. Nút **TỪ CHỐI** rê tới gần 110px là trượt đi chỗ khác (thấy rõ đường chạy)
   (chọn trong 28 điểm ngẫu nhiên lấy chỗ xa tay nhất), mỗi lần bung ra chữ *lewlew*, nhỏ dần;
   chạy đủ 8 lần thì biến mất hẳn. Chặn ở cả `pointerdown` lẫn `click` nên **không cách nào bấm được**.
-- Bấm **CÓ** → hiện ô chọn ngày (điền sẵn thứ 7 tới) + giờ (19:00) + ô lời nhắn không bắt buộc.
+- Bấm **ĐỒNG Ý** → hiện ô chọn ngày (điền sẵn thứ 7 tới) + giờ (19:00) + ô lời nhắn không bắt buộc.
   Chốt xong: bầu sao morph sang Trái tim + sóng xung kích, hiện thẻ hẹn có đếm ngược.
 - Chỗ xem lại: nút **Hẹn tiếp theo** ở thanh điều khiển + một dòng trên HUD góc phải.
 - Lưu 3 tầng, cái nào mới hơn (`savedAt`) thì thắng: link chia sẻ `#hen=` · `localStorage` · máy chủ.
@@ -63,6 +63,20 @@
 
 ## Nhật ký
 
+### 2026-09-19 — Sửa chương lời mời theo góp ý
+
+- **Nền khó đọc**: chữ chương này nằm đúng chỗ hình trái tim sáng nhất. Lót một mảng tối toả dần
+  (`#act-date .wrap::before`, `z-index:-1`, không mép cứng) — đọc rõ mà vẫn thấy sao phía sau.
+- **Phải NHÌN THẤY nút chạy**: trước đây nút đổi chỗ tức thì (cố ý, sợ trượt mượt thì bị bắt) nên
+  mắt chỉ thấy nó "biến mất rồi hiện lại". Nay cho trượt `.26s`, bù lại: bán kính kích hoạt tăng
+  90 → 110px, và hai cú chạy cách nhau ít nhất 0,3s (`FLEE_GAP`) — nhịp nghỉ đặt trong `flee()`,
+  cú bị hoãn sẽ hẹn lại rồi đo lại xem tay còn kề bên không, **không** đặt ở `pointermove` (đặt ở
+  đó chính là con bug đã sửa hôm trước). Trong lúc đang trượt thì đo khung thật từng lần, không
+  dùng khung nhớ sẵn.
+- **Đổi chữ nút**: `Có`/`Không` → **`Đồng ý`/`Từ chối`** (cả 3 file tài liệu đã sửa theo).
+- Lái Chrome thật kiểm 18 điểm, đạt cả 18 — trong đó có điểm đếm **15 vị trí trung gian** qua 40
+  khung hình để chứng minh nó trượt chứ không nhảy cóc.
+
 ### 2026-09-19 — Chương lời mời + build.js
 - **`build.js`**: tách ngược base64 trong `index.html` ra `assets/` (ảnh 478x760, nhạc 4 MB,
   bản đồ sao 113.180 ngôi). Kiểm: build lại ra file **giống hệt từng byte**. Từ giờ chỉ sửa
@@ -72,7 +86,7 @@
 - Thêm chương 4 **Lời mời** (xem mục trên). Đã lái Chrome thật kiểm 28 điểm, đạt cả 28,
   cả khổ 1280px lẫn 420px, không lỗi console.
 - **Bug thật đã sửa trong lúc làm**: hãm sự kiện `pointermove` theo thời gian (60ms) khiến một
-  nhát rê chuột nhanh bị nuốt mất sự kiện CUỐI — con trỏ đậu ngay trên nút KHÔNG mà nút đứng im,
+  nhát rê chuột nhanh bị nuốt mất sự kiện CUỐI — con trỏ đậu ngay trên nút TỪ CHỐI mà nút đứng im,
   phải rung chuột mới chạy. Thay bằng nhớ sẵn khung của nút, chỉ đo lại khi nó có thể đã dịch.
 - **Hoãn**: “Chòm sao kỷ niệm” — mới đi chơi một buổi, chưa đủ kỷ niệm để rải sao. Giữ nguyên ý
   tưởng trong `IDEAS.md` §3.1, làm sau.
