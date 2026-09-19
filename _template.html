@@ -230,6 +230,27 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
 #finaleBtn:hover{color:#fff;border-color:var(--rose);box-shadow:0 0 22px rgba(255,125,158,.26)}
 #finaleBtn svg{width:13px;height:13px;flex:none;animation:beat 1.9s ease-in-out infinite}
 
+/* lời bài hát chạy karaoke phía trên thanh điều khiển */
+#lyricBar{
+  position:fixed;left:50%;transform:translateX(calc(-50% - 70px)) translateY(6px);
+  bottom:calc(98px + env(safe-area-inset-bottom,0px));z-index:6;
+  max-width:calc(100vw - 28px);pointer-events:none;
+  display:flex;justify-content:center;
+  opacity:0;transition:opacity .5s ease,transform .5s ease
+}
+#lyricBar.show{opacity:1;transform:translateX(calc(-50% - 70px)) translateY(0)}
+.lyricInner{
+  position:relative;font-family:var(--voice);font-style:italic;
+  font-size:17px;letter-spacing:.01em;white-space:nowrap;color:transparent
+}
+.lyricBase,.lyricFill{position:absolute;left:0;top:0;white-space:nowrap}
+.lyricBase{color:var(--mute)}
+.lyricFill{color:var(--aqua);overflow:hidden;width:0%;text-shadow:0 0 14px rgba(150,220,255,.35)}
+@media (max-width:600px){
+  .lyricInner{font-size:14px}
+  #lyricBar{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+}
+
 /* chỉ hiện khi trình duyệt chặn nhạc tự phát — chạm một cái là tắt hẳn, không thành nút cố định */
 #tapSound{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:6;
   font-family:var(--hud);font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;
@@ -603,6 +624,13 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
   <button class="btn" id="dJump" hidden><span class="dot"></span>Hẹn tiếp theo</button>
 </div>
 
+<div id="lyricBar" aria-hidden="true">
+  <div class="lyricInner">
+    <span class="lyricBase" id="lyricBase"></span>
+    <span class="lyricFill" id="lyricFill"></span>
+  </div>
+</div>
+
 <div id="tapSound" hidden>Chạm một cái để mở nhạc</div>
 
 <audio id="bgm" src="__AUDIO_B64__" loop preload="metadata"></audio>
@@ -742,6 +770,87 @@ function wake(){
 }
 WAKE.forEach(ev => addEventListener(ev, wake, { passive: true }));
 startMusic(2.6);
+
+/* ============================ lời bài hát (karaoke) ============================
+   Mỗi phần tử = 1 câu. Dán nguyên văn câu hát vào `text` (giữ đúng thứ tự bài hát).
+   Thời điểm bắt đầu/kết thúc tự chia theo độ dài file nhạc (bgm.duration) và số chữ
+   mỗi câu — không cần gõ tay từng giây. Nếu sau này canh được mốc thời gian thật
+   (nghe nhạc, bấm dừng, đọc bgm.currentTime), điền số giây vào `at` của câu đó để
+   ghi đè phần tự chia, câu nào không có `at` vẫn tự nội suy theo câu liền trước/sau. */
+const LYRICS = [
+  { text: 'I found a love for me' },  // 1
+  { text: 'Darling, just dive right in and follow my lead' },  // 2
+  { text: 'Well, I found a girl, beautiful and sweet' },  // 3
+  { text: "Oh, I never knew you were the someone waitin' for me" },  // 4
+  { text: "Cause we were just kids when we fell in love, not knowin' what it was" },  // 5
+  { text: 'I will not give you up this time' },  // 6
+  { text: 'Darling, just kiss me slow, your heart is all I own' },  // 7
+  { text: "And in your eyes, you're holding mine" },  // 8
+  { text: "Baby, I'm dancin' in the dark with you between my arms" },  // 9
+  { text: "Barefoot on the grass, listenin' to our favourite song" },  // 10
+  { text: 'When you said you looked a mess, I whispered underneath my breath' },  // 11
+  { text: 'But you heard it, "Darling, you look perfect tonight"' },  // 12
+  { text: 'Well, I found a woman, stronger than anyone I know' },  // 13
+  { text: "She shares my dreams, I hope that someday, I'll share her home" },  // 14
+  { text: 'I found a love to carry more than just my secrets' },  // 15
+  { text: 'To carry love, to carry children of our own' },  // 16
+  { text: "We are still kids, but we're so in love, fighting against all odds" },  // 17
+  { text: "I know we'll be alright this time" },  // 18
+  { text: "Darling, just hold my hand, be my girl, I'll be your man" },  // 19
+  { text: 'I see my future in your eyes' },  // 20
+  { text: "Baby, I'm dancin' in the dark with you between my arms" },  // 21
+  { text: "Barefoot on the grass, listenin' to our favourite song" },  // 22
+  { text: "When I saw you in that dress, lookin' so beautiful" },  // 23
+  { text: "I don't deserve this, darling, you look perfect tonight" },  // 24
+  { text: 'No, no, no' },  // 25
+  { text: 'Mm-hm' },  // 26
+  { text: "Baby, I'm dancin' in the dark with you between my arms" },  // 27
+  { text: "Barefoot on the grass, listenin' to our favourite song" },  // 28
+  { text: 'I have faith in what I see, now I know I have met' },  // 29
+  { text: 'An angel in person, and she looks perfect' },  // 30
+  { text: "I don't deserve this, you look perfect tonight" },  // 31
+];
+
+const lyricBar = document.getElementById('lyricBar');
+const lyricBase = document.getElementById('lyricBase');
+const lyricFill = document.getElementById('lyricFill');
+let lyricPlan = null;
+let lyricActive = -1;
+
+function buildLyricPlan(){
+  const lines = LYRICS.filter(l => l.text && l.text.trim());
+  if (!lines.length || !isFinite(bgm.duration) || bgm.duration <= 0){ lyricPlan = null; return; }
+  const dur = bgm.duration;
+  const weights = lines.map(l => Math.max(1, l.text.trim().split(/\s+/).length));
+  const totalW = weights.reduce((a, b) => a + b, 0);
+  let cursor = 0;
+  lyricPlan = lines.map((l, i) => {
+    const start = (typeof l.at === 'number') ? l.at : (cursor / totalW) * dur;
+    cursor += weights[i];
+    const next = lines[i + 1];
+    const end = (next && typeof next.at === 'number') ? next.at : (cursor / totalW) * dur;
+    return { text: l.text.trim(), start, end: Math.max(end, start + 0.3) };
+  });
+}
+
+function renderLyric(t){
+  if (!lyricPlan){ lyricBar.classList.remove('show'); return; }
+  const idx = lyricPlan.findIndex(l => t >= l.start && t < l.end);
+  if (idx === -1){ lyricBar.classList.remove('show'); lyricActive = -1; return; }
+  const line = lyricPlan[idx];
+  if (idx !== lyricActive){
+    lyricActive = idx;
+    lyricBase.textContent = line.text;
+    lyricFill.textContent = line.text;
+  }
+  const progress = Math.min(1, Math.max(0, (t - line.start) / (line.end - line.start)));
+  lyricFill.style.width = (progress * 100).toFixed(2) + '%';
+  lyricBar.classList.add('show');
+}
+
+bgm.addEventListener('loadedmetadata', buildLyricPlan);
+if (bgm.readyState >= 1) buildLyricPlan();
+bgm.addEventListener('timeupdate', () => renderLyric(bgm.currentTime));
 
 /* chuông / tiếng dâng — tổng hợp bằng oscillator, không dùng file */
 function bell(at, freq, dur, gain, type){
