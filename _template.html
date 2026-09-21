@@ -245,6 +245,11 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
 }
 .lyricInner .lw{color:#7f93ab;transition:color .45s ease,text-shadow .45s ease}
 .lyricInner .lw.lit{color:var(--aqua);text-shadow:0 0 14px rgba(150,220,255,.35)}
+/* điểm nhấn "(Vy)" / emoji chèn tay trong lyric — luôn nổi bật riêng, không phụ thuộc màu lit chung */
+.lyricInner .highlight-vy{color:#ffb8d4;font-weight:600;font-style:normal;opacity:.55;transition:opacity .45s ease,text-shadow .45s ease}
+.lyricInner .lw.lit .highlight-vy{opacity:1;text-shadow:0 0 12px rgba(255,150,190,.55)}
+.lyricInner .highlight-icon{display:inline-block;opacity:.55;transition:opacity .45s ease,transform .45s ease}
+.lyricInner .lw.lit .highlight-icon{opacity:1;transform:scale(1.25)}
 @media (max-width:620px){
   /* console bọc xuống nhiều hàng trên màn hẹp (xem #console ở @media max-width:620px bên dưới)
      nên lyricBar cần chừa khoảng cao hơn hẳn để không bị đè khuất phía sau thanh nút */
@@ -771,37 +776,37 @@ startMusic(2.6);
    (nghe nhạc, bấm dừng, đọc bgm.currentTime), điền số giây vào `at` của câu đó để
    ghi đè phần tự chia, câu nào không có `at` vẫn tự nội suy theo câu liền trước/sau. */
 const LYRICS = [
-  { text: 'I found a love for me', at: 3.44 },  // 1
-  { text: 'Darling, just dive right in and follow my lead', at: 10.47 },  // 2
-  { text: 'Well, I found a girl, beautiful and sweet', at: 17.74 },  // 3
-  { text: "Oh, I never knew you were the someone waitin' for me", at: 25.18 },  // 4
-  { text: "Cause we were just kids when we fell in love, not knowin' what it was", at: 31.95 },  // 5
-  { text: 'I will not give you up this time', at: 40.73 },  // 6
-  { text: 'Darling, just kiss me slow, your heart is all I own', at: 48.29 },  // 7
-  { text: "And in your eyes, you're holding mine", at: 55.82 },  // 8
-  { text: "Baby, I'm dancin' in the dark with you between my arms", at: 62.6 },  // 9
-  { text: "Barefoot on the grass, listenin' to our favourite song", at: 73.75 },  // 10
-  { text: 'When you said you looked a mess, I whispered underneath my breath', at: 80.78 },  // 11
-  { text: 'But you heard it, "Darling, you look perfect tonight"', at: 88.07 },  // 12
-  { text: 'Well, I found a woman, stronger than anyone I know', at: 101.13 },  // 13
-  { text: "She shares my dreams, I hope that someday, I'll share her home", at: 108.91 },  // 14
-  { text: 'I found a love to carry more than just my secrets', at: 116.72 },  // 15
-  { text: 'To carry love, to carry children of our own', at: 124.7 },  // 16
-  { text: "We are still kids, but we're so in love, fighting against all odds", at: 130.95 },  // 17
-  { text: "I know we'll be alright this time", at: 139.22 },  // 18
-  { text: "Darling, just hold my hand, be my girl, I'll be your man", at: 146.75 },  // 19
-  { text: 'I see my future in your eyes', at: 154.52 },  // 20
-  { text: "Baby, I'm dancin' in the dark with you between my arms", at: 161.1 },  // 21
-  { text: "Barefoot on the grass, listenin' to our favourite song", at: 172.66 },  // 22
-  { text: "When I saw you in that dress, lookin' so beautiful", at: 179.45 },  // 23
-  { text: "I don't deserve this, darling, you look perfect tonight", at: 185.24 },  // 24
-  { text: 'No, no, no', at: 198.9 },  // 25
-  { text: 'Mm-hm', at: 202 },  // 26
-  { text: "Baby, I'm dancin' in the dark with you between my arms", at: 206.59 },  // 27
-  { text: "Barefoot on the grass, listenin' to our favourite song", at: 217.88 },  // 28
-  { text: 'I have faith in what I see, now I know I have met', at: 224.9 },  // 29
-  { text: 'An angel in person, and she looks perfect', at: 228.42 },  // 30
-  { text: "I don't deserve this, you look perfect tonight", at: 234.74 },  // 31
+  { text: 'I found a love for me', at: 3.44, words: [3.44,3.9,4.49,4.81,5.76,6.7] },  // 1
+  { text: 'Darling, just dive right in and follow my lead', at: 10.47, words: [10.47,11.12,11.44,12.1,12.45,13.01,13.34,14.29,15.24] },  // 2
+  { text: 'Well, I found a girl (Vy), beautiful and sweet 🌸', at: 17.74, words: [17.74,18.39,18.9,19.57,19.98,20.93,21.55,21.99] },  // 3 [Điểm nhấn 1: Tên Vy & hoa]
+  { text: "Oh, I never knew you were the someone waitin' for me", at: 25.18, words: [25.18,25.6,26.25,26.92,27.55,28.18,28.82,29.43,29.74,30.39,31.34] },  // 4
+  { text: "Cause we were just kids when we fell in love, not knowin' what it was", at: 31.95, words: [31.95,32.29,32.6,32.91,33.19,33.55,33.92,34.16,34.98,35.13,35.55,35.92,36.07,36.47,37.02] },  // 5
+  { text: 'I will not give you up this time', at: 40.73, words: [40.73,41.15,41.48,41.76,42.12,42.69,43.34,43.64] },  // 6
+  { text: 'Darling, just kiss me slow, your heart is all I own', at: 48.29, words: [48.29,48.88,49.35,49.73,50.28,50.78,51.43,51.87,52.34,52.91,53.45] },  // 7
+  { text: "And in your eyes, you're holding mine", at: 55.82, words: [55.82,56.25,56.67,57.13,57.58,58.16,58.76] },  // 8
+  { text: "Baby, I'm dancin' in the dark with you between my arms 🌙", at: 62.6, words: [62.6,63.08,63.55,64.03,64.39,64.82,65.36,65.78,66.32,66.78,67.35] },  // 9 [Điểm nhấn 2: Khiêu vũ dưới trăng]
+  { text: "Barefoot on the grass, listenin' to our favourite song", at: 73.75, words: [73.75,74.32,74.78,75.19,75.72,76.3,76.71,77.2,77.76] },  // 10
+  { text: 'When you said you looked a mess, I whispered underneath my breath', at: 80.78, words: [80.78,81.18,81.59,81.95,82.39,82.77,83.2,83.76,84.29,84.87,85.34,85.81] },  // 11
+  { text: 'But you heard it, "Vy, you look perfect tonight" ✨', at: 88.07, words: [88.07,88.54,88.93,89.35,89.79,90.35,90.84,91.32,91.82] },  // 12 [Điểm nhấn 3: Tên Vy & sự hoàn hảo]
+  { text: 'Well, I found a woman, stronger than anyone I know', at: 101.13, words: [101.13,101.61,102.07,102.51,102.91,103.49,104.05,104.63,105.18,105.72] },  // 13
+  { text: "She shares my dreams, I hope that someday, I'll share her home", at: 108.91, words: [108.91,109.39,109.86,110.34,110.78,111.29,111.82,112.4,113.01,113.55,114.11,114.69] },  // 14
+  { text: 'I found a love to carry more than just my secrets', at: 116.72, words: [116.72,117.19,117.61,118.08,118.53,119.07,119.61,120.08,120.65,121.17,121.7] },  // 15
+  { text: 'To carry love, to carry children of our own', at: 124.7, words: [124.7,125.14,125.58,126.06,126.48,126.99,127.48,128.04,128.54,129.05] },  // 16
+  { text: "We are still kids, but we're so in love, fighting against all odds", at: 130.95, words: [130.95,131.39,131.8,132.18,132.59,133.02,133.45,133.95,134.38,134.91,135.47] },  // 17
+  { text: "I know we'll be alright this time", at: 139.22, words: [139.22,139.69,140.19,140.73,141.31,141.85,142.44,143.06] },  // 18
+  { text: "Darling, just hold my hand, be my girl, I'll be your man", at: 146.75, words: [146.75,147.21,147.62,148.1,148.56,149.04,149.54,150.02,150.57,151.12,151.68] },  // 19
+  { text: 'I see my future in your eyes', at: 154.52, words: [154.52,154.98,155.43,155.91,156.43,156.94,157.5] },  // 20
+  { text: "Baby, I'm dancin' in the dark with you between my arms", at: 161.1, words: [161.1,161.57,162.06,162.53,162.91,163.35,163.88,164.35,164.84,165.3,165.85] },  // 21
+  { text: "Barefoot on the grass, listenin' to our favourite song", at: 172.66, words: [172.66,173.19,173.63,174.09,174.58,175.14,175.62,176.13,176.68] },  // 22
+  { text: "When I saw you in that dress, lookin' so beautiful", at: 179.45, words: [179.45,179.93,180.4,180.87,181.31,181.8,182.35,182.9,183.39,183.83] },  // 23
+  { text: "I don't deserve this, darling, you look perfect tonight", at: 185.24, words: [185.24,185.75,186.07,186.39,186.69,187.03,187.49,187.98,188.58] },  // 24
+  { text: 'No, no, no', at: 198.9, words: [198.9,200.28,201.54] },  // 25
+  { text: 'Mm-hm', at: 202, words: [202] },  // 26
+  { text: "Baby, I'm dancin' in the dark with you between my arms", at: 206.59, words: [206.59,207.03,207.52,208.17,208.48,209.25,210.06,210.37,210.99,211.32,211.96] },  // 27
+  { text: "Barefoot on the grass, listenin' to our favourite song", at: 217.88, words: [217.88,218.09,218.59,218.91,219.54,219.8,220.35,220.8,221.3] },  // 28
+  { text: 'I have faith in what I see, now I know I have met', at: 224.9, words: [224.9,225.55,226.14,226.49,227.11,227.43,227.76,228.38] },  // 29
+  { text: 'An angel in person (Vy), and she looks perfect 👼', at: 228.42, words: [228.42,228.69,229.01,229.32,229.66,229.97,230.27,230.91,231.22,231.86] },  // 30 [Điểm nhấn 4: Thiên thần Vy]
+  { text: "I don't deserve this, you look perfect tonight ❤️", at: 234.74, words: [234.74,235.01,235.66,235.96,236.29,236.59,236.9] },  // 31 [Điểm nhấn 5: Kết bài trọn vẹn với trái tim]
 ];
 
 const lyricBar = document.getElementById('lyricBar');
@@ -810,9 +815,35 @@ let lyricPlan = null;
 let lyricActive = -1;
 let lyricSpans = [];
 
+/* "(Vy)" hoặc emoji chèn tay để làm điểm nhấn không tính là 1 từ hát riêng —
+   gộp ngược vào từ liền trước để không lệch số lượng so với mốc giây đã đo,
+   đồng thời đánh dấu "mark" để renderLyric bọc span highlight riêng. */
+const ICON_RE = /^[\u{1F300}-\u{1FAFF}☀-➿️‍]+[,.!?;:]*$/u;
+const VY_PAREN_RE = /^\(Vy\)[,.!?;:]*$/i;
+
+function tokenizeLyricLine(text){
+  const raw = text.trim().split(/\s+/);
+  const tokens = [];
+  raw.forEach(tok => {
+    const isIcon = ICON_RE.test(tok);
+    const isVyAside = VY_PAREN_RE.test(tok);
+    if ((isIcon || isVyAside) && tokens.length){
+      const prev = tokens[tokens.length - 1];
+      prev.text += ' ' + tok;
+      prev.marks.push({ kind: isIcon ? 'icon' : 'vy', str: tok });
+    } else {
+      tokens.push({ text: tok, marks: [] });
+    }
+  });
+  return tokens;
+}
+
 /* mỗi câu tách thành từng TỪ kèm mốc thời gian riêng — sáng dần theo từng từ
    (đổi từ kiểu quét sáng liên tục theo ký tự sang bật sáng rời rạc theo từ,
-   mượt hơn nhờ CSS transition trên từng span thay vì clip theo phần trăm). */
+   mượt hơn nhờ CSS transition trên từng span thay vì clip theo phần trăm).
+   Có mốc giây thật cho từng từ (l.words, đo tay từ audio) thì dùng luôn cho
+   khớp lời hát; số từ sau khi gộp "(Vy)"/emoji không khớp số mốc đo được thì
+   rơi về ước lượng theo độ dài chữ như cũ (an toàn, không vỡ layout). */
 function buildLyricPlan(){
   const lines = LYRICS.filter(l => l.text && l.text.trim());
   if (!lines.length || !isFinite(bgm.duration) || bgm.duration <= 0){ lyricPlan = null; return; }
@@ -825,17 +856,40 @@ function buildLyricPlan(){
     cursor += weights[i];
     const next = lines[i + 1];
     const end = (next && typeof next.at === 'number') ? next.at : (cursor / totalW) * dur;
-    const words = l.text.trim().split(/\s+/);
-    const wWeights = words.map(w => Math.max(1, w.length));
-    const wTotal = wWeights.reduce((a, b) => a + b, 0);
-    let wCursor = 0;
-    const wordTimes = words.map((w, wi) => {
-      const wStart = start + (wCursor / wTotal) * (end - start);
-      wCursor += wWeights[wi];
-      return { text: w, start: wStart };
-    });
-    return { start, end: Math.max(end, start + 0.3), words: wordTimes };
+    const tokens = tokenizeLyricLine(l.text);
+    const realEnd = Math.max(end, start + 0.3);
+
+    if (Array.isArray(l.words) && l.words.length === tokens.length){
+      tokens.forEach((tok, wi) => { tok.start = l.words[wi]; });
+    } else {
+      const wWeights = tokens.map(tok => Math.max(1, tok.text.length));
+      const wTotal = wWeights.reduce((a, b) => a + b, 0);
+      let wCursor = 0;
+      tokens.forEach((tok, wi) => {
+        tok.start = start + (wCursor / wTotal) * (realEnd - start);
+        wCursor += wWeights[wi];
+      });
+    }
+    return { start, end: realEnd, words: tokens };
   });
+}
+
+/* chèn <span class="highlight-vy"> / <span class="highlight-icon"> quanh đúng
+   phần "(Vy)"/emoji bên trong text của 1 từ, phần còn lại giữ nguyên chữ thường. */
+function renderWordContent(span, tok){
+  if (!tok.marks.length){ span.textContent = tok.text; return; }
+  let rest = tok.text;
+  tok.marks.forEach(m => {
+    const idx = rest.indexOf(m.str);
+    if (idx === -1) return;
+    if (idx > 0) span.appendChild(document.createTextNode(rest.slice(0, idx)));
+    const mark = document.createElement('span');
+    mark.className = m.kind === 'icon' ? 'highlight-icon' : 'highlight-vy';
+    mark.textContent = m.str;
+    span.appendChild(mark);
+    rest = rest.slice(idx + m.str.length);
+  });
+  if (rest) span.appendChild(document.createTextNode(rest));
 }
 
 function renderLyric(t){
@@ -849,7 +903,8 @@ function renderLyric(t){
     lyricSpans = line.words.map((w, wi) => {
       const span = document.createElement('span');
       span.className = 'lw';
-      span.textContent = w.text + (wi < line.words.length - 1 ? ' ' : '');
+      renderWordContent(span, w);
+      if (wi < line.words.length - 1) span.appendChild(document.createTextNode(' '));
       lyricLine.appendChild(span);
       return span;
     });
