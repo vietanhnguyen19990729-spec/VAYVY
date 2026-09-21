@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#04060c">
 <title>Chòm sao Thảo Vy</title>
+<link rel="icon" type="image/png" href="__LOGO_B64__">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;500;600&family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&family=Be+Vietnam+Pro:wght@200;400&display=swap">
@@ -97,6 +98,11 @@ body::after{
 .c-tr{top:10px;right:10px;border-left:0;border-bottom:0}
 .c-bl{bottom:10px;left:10px;border-right:0;border-top:0}
 .c-br{bottom:10px;right:10px;border-left:0;border-top:0}
+
+.brandRow{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.brandRow img{height:19px;width:auto;display:block;opacity:.8;mix-blend-mode:screen;
+  filter:saturate(.55) brightness(1.3) drop-shadow(0 0 5px rgba(87,226,213,.4))}
+.brandRow b{font-weight:500;color:var(--aqua);letter-spacing:.16em}
 
 .page{position:relative;z-index:2}
 section{
@@ -496,9 +502,8 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
 <div class="corner c-bl"></div><div class="corner c-br"></div>
 
 <div class="hud hud-tl">
-  Đài quan trắc<br>
-  <b>20°48′ B · 106°37′ Đ</b><br>
-  Cao độ ≈ 116 m
+  <div class="brandRow"><img src="__LOGO_B64__" alt=""><b>Thảo Vy</b></div>
+  Chòm sao riêng · một bầu trời
 </div>
 <div class="hud hud-tr">
   Lượt truy cập <b id="hudVisits">—</b><br>
