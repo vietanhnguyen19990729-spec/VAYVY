@@ -778,7 +778,7 @@ startMusic(2.6);
 const LYRICS = [
   { text: 'I found a love for me', at: 3.44, words: [3.44,3.9,4.49,4.81,5.76,6.7] },  // 1
   { text: 'Darling, just dive right in and follow my lead', at: 10.47, words: [10.47,11.12,11.44,12.1,12.45,13.01,13.34,14.29,15.24] },  // 2
-  { text: 'Well, I found a girl (Vy), beautiful and sweet 🌸', at: 17.74, words: [17.74,18.39,18.9,19.57,19.98,20.93,21.55,21.99] },  // 3 [Điểm nhấn 1: Tên Vy & hoa]
+  { text: 'Well, I found Vy, beautiful and sweet 🌸', at: 17.74, words: [17.74,18.39,18.9,19.57,19.98,20.93,21.55,21.99] },  // 3 [Điểm nhấn 1: Tên Vy & hoa]
   { text: "Oh, I never knew you were the someone waitin' for me", at: 25.18, words: [25.18,25.6,26.25,26.92,27.55,28.18,28.82,29.43,29.74,30.39,31.34] },  // 4
   { text: "Cause we were just kids when we fell in love, not knowin' what it was", at: 31.95, words: [31.95,32.29,32.6,32.91,33.19,33.55,33.92,34.16,34.98,35.13,35.55,35.92,36.07,36.47,37.02] },  // 5
   { text: 'I will not give you up this time', at: 40.73, words: [40.73,41.15,41.48,41.76,42.12,42.69,43.34,43.64] },  // 6
@@ -805,7 +805,7 @@ const LYRICS = [
   { text: "Baby, I'm dancin' in the dark with you between my arms", at: 206.59, words: [206.59,207.03,207.52,208.17,208.48,209.25,210.06,210.37,210.99,211.32,211.96] },  // 27
   { text: "Barefoot on the grass, listenin' to our favourite song", at: 217.88, words: [217.88,218.09,218.59,218.91,219.54,219.8,220.35,220.8,221.3] },  // 28
   { text: 'I have faith in what I see, now I know I have met', at: 224.9, words: [224.9,225.55,226.14,226.49,227.11,227.43,227.76,228.38] },  // 29
-  { text: 'An angel in person (Vy), and she looks perfect 👼', at: 228.42, words: [228.42,228.69,229.01,229.32,229.66,229.97,230.27,230.91,231.22,231.86] },  // 30 [Điểm nhấn 4: Thiên thần Vy]
+  { text: 'Vy, an angel in person, and she looks perfect 👼', at: 228.42, words: [228.42,228.69,229.01,229.32,229.66,229.97,230.27,230.91,231.22,231.86] },  // 30 [Điểm nhấn 4: Thiên thần Vy]
   { text: "I don't deserve this, you look perfect tonight ❤️", at: 234.74, words: [234.74,235.01,235.66,235.96,236.29,236.59,236.9] },  // 31 [Điểm nhấn 5: Kết bài trọn vẹn với trái tim]
 ];
 
@@ -820,6 +820,10 @@ let lyricSpans = [];
    đồng thời đánh dấu "mark" để renderLyric bọc span highlight riêng. */
 const ICON_RE = /^[\u{1F300}-\u{1FAFF}☀-➿️‍]+[,.!?;:]*$/u;
 const VY_PAREN_RE = /^\(Vy\)[,.!?;:]*$/i;
+/* quét NỘI DUNG cuối cùng của 1 từ để bọc span highlight — nhận cả "Vy" chèn tự
+   nhiên trong câu (VD "Vy, an angel...") lẫn dạng ngoặc "(Vy)" và mọi emoji,
+   không phụ thuộc việc từ đó có bị gộp lúc tokenize hay không. */
+const HIGHLIGHT_SCAN_RE = /(\(?\bVy\b\)?)|([\u{1F300}-\u{1FAFF}☀-➿️‍]+)/gui;
 
 function tokenizeLyricLine(text){
   const raw = text.trim().split(/\s+/);
@@ -828,11 +832,9 @@ function tokenizeLyricLine(text){
     const isIcon = ICON_RE.test(tok);
     const isVyAside = VY_PAREN_RE.test(tok);
     if ((isIcon || isVyAside) && tokens.length){
-      const prev = tokens[tokens.length - 1];
-      prev.text += ' ' + tok;
-      prev.marks.push({ kind: isIcon ? 'icon' : 'vy', str: tok });
+      tokens[tokens.length - 1].text += ' ' + tok;
     } else {
-      tokens.push({ text: tok, marks: [] });
+      tokens.push({ text: tok });
     }
   });
   return tokens;
@@ -875,21 +877,20 @@ function buildLyricPlan(){
 }
 
 /* chèn <span class="highlight-vy"> / <span class="highlight-icon"> quanh đúng
-   phần "(Vy)"/emoji bên trong text của 1 từ, phần còn lại giữ nguyên chữ thường. */
+   phần "Vy"/emoji bên trong text của 1 từ, phần còn lại giữ nguyên chữ thường. */
 function renderWordContent(span, tok){
-  if (!tok.marks.length){ span.textContent = tok.text; return; }
-  let rest = tok.text;
-  tok.marks.forEach(m => {
-    const idx = rest.indexOf(m.str);
-    if (idx === -1) return;
-    if (idx > 0) span.appendChild(document.createTextNode(rest.slice(0, idx)));
+  const text = tok.text;
+  HIGHLIGHT_SCAN_RE.lastIndex = 0;
+  let last = 0, m;
+  while ((m = HIGHLIGHT_SCAN_RE.exec(text))){
+    if (m.index > last) span.appendChild(document.createTextNode(text.slice(last, m.index)));
     const mark = document.createElement('span');
-    mark.className = m.kind === 'icon' ? 'highlight-icon' : 'highlight-vy';
-    mark.textContent = m.str;
+    mark.className = m[1] ? 'highlight-vy' : 'highlight-icon';
+    mark.textContent = m[0];
     span.appendChild(mark);
-    rest = rest.slice(idx + m.str.length);
-  });
-  if (rest) span.appendChild(document.createTextNode(rest));
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) span.appendChild(document.createTextNode(text.slice(last)));
 }
 
 function renderLyric(t){
