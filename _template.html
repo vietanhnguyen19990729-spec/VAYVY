@@ -414,6 +414,41 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
   color:var(--aqua-dim);margin:16px 0 0;min-height:13px;transition:color .3s ease}
 .plan-note.warn{color:var(--ember)}
 
+/* ==================== con đường hẹn hò · lộ trình các buổi đã qua ==================== */
+.road{margin-top:46px;max-width:560px}
+.road-lbl{font-family:var(--hud);font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--aqua-dim);margin-bottom:20px}
+.road-track{position:relative;padding-left:24px}
+.road-track::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;
+  background:linear-gradient(to bottom, var(--aqua-dim), rgba(87,226,213,.10))}
+.road-item{position:relative;padding-bottom:28px;opacity:0;transform:translateX(-12px);
+  transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.road-item.in{opacity:1;transform:none}
+.road-item:last-child{padding-bottom:0}
+.road-dot{position:absolute;left:-24px;top:4px;width:11px;height:11px;border-radius:50%;
+  background:var(--void);border:1px solid var(--aqua);box-shadow:0 0 10px rgba(87,226,213,.5)}
+.road-item.origin .road-dot{background:var(--rose);border-color:var(--rose);
+  box-shadow:0 0 10px rgba(255,125,158,.5)}
+.road-date{font-family:var(--hud);font-weight:600;font-size:13px;color:var(--star);letter-spacing:.05em}
+.road-place{font-family:var(--hud);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--rose);margin-top:4px}
+.road-note{font-family:var(--body);font-size:13.5px;line-height:1.6;color:#c7d4e2;margin-top:7px}
+.road-empty{font-family:var(--hud);font-size:10px;letter-spacing:.14em;color:var(--mute);
+  padding-bottom:2px;font-style:normal}
+
+.doneBox{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
+  max-height:0;overflow:hidden;opacity:0;transition:max-height .5s ease,opacity .4s ease}
+.doneBox.on{max-height:220px;opacity:1}
+.doneBox label{display:block;font-family:var(--hud);font-size:9.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--aqua-dim);margin-bottom:8px}
+.doneBox textarea{width:100%;color-scheme:dark;font-family:var(--body);font-size:13.5px;line-height:1.55;
+  color:var(--star);background:var(--glass);border:1px solid var(--line);border-radius:1px;
+  padding:11px 12px;outline:none;resize:vertical;min-height:56px}
+.doneBox textarea::placeholder{color:#5f748d}
+.doneBox .mini{margin-top:10px}
+.card-place{font-family:var(--hud);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--rose);margin-top:2px}
+
 .card{border:1px solid var(--line);background:var(--glass);
   backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
   padding:20px 24px 18px;max-width:430px;position:relative;margin-top:30px;
@@ -549,6 +584,18 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
         <div><dt>Đang đếm</dt><dd id="stripDay">—</dd></div>
         <div><dt>Trạng thái</dt><dd>Còn tiếp diễn</dd></div>
       </div>
+
+      <div class="road">
+        <div class="road-lbl">Con đường mình đã đi</div>
+        <div class="road-track" id="roadTrack">
+          <div class="road-item origin in">
+            <div class="road-dot"></div>
+            <div class="road-date">17.09.2026</div>
+            <div class="road-place">Đồi Thiên Văn</div>
+            <div class="road-note">Lần đầu hẹn hò — nơi anh bắt đầu đếm, và chưa từng có ý định dừng lại.</div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -592,6 +639,10 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
             <label for="dTime">Mấy giờ em rảnh</label>
             <input type="time" id="dTime">
           </div>
+          <div class="field">
+            <label for="dPlace">Đi đâu</label>
+            <input type="text" id="dPlace" maxlength="80" placeholder="Quán cà phê, rạp phim…">
+          </div>
           <div class="field wide">
             <label for="dMsg">Lời nhắn cho anh</label>
             <textarea id="dMsg" rows="2" maxlength="200" placeholder="Nhớ đón em sớm nha…"></textarea>
@@ -603,12 +654,19 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
       <div class="card" id="dCard" hidden>
         <div class="card-lbl">Hẹn tiếp theo</div>
         <div class="card-day" id="cdDay">—</div>
+        <div class="card-place" id="cdPlace" hidden></div>
         <div class="card-time" id="cdTime">—</div>
         <div class="card-msg" id="cdMsg" hidden></div>
         <div class="card-left" id="cdLeft">—</div>
         <div class="card-act">
           <button type="button" class="mini" id="dShare">Gửi cho anh</button>
           <button type="button" class="mini" id="dEdit">Đổi lịch</button>
+          <button type="button" class="mini" id="dDone">Đã đi rồi ♥</button>
+        </div>
+        <div class="doneBox" id="doneBox" hidden>
+          <label for="dHighlight">Có gì thú vị đã xảy ra?</label>
+          <textarea id="dHighlight" rows="2" maxlength="240" placeholder="Kỷ niệm đáng nhớ của buổi này…"></textarea>
+          <button type="button" class="mini" id="dConfirmDone">Thêm vào con đường</button>
         </div>
       </div>
 
@@ -1443,8 +1501,10 @@ const FX = (() => {
    Dạng: https://<tên>-default-rtdb.asia-southeast1.firebasedatabase.app/hen.json */
 const SYNC_URL = 'https://vya-loveyou-default-rtdb.asia-southeast1.firebasedatabase.app/hen.json';
 const VISITS_SYNC_URL = 'https://vya-loveyou-default-rtdb.asia-southeast1.firebasedatabase.app/visits.json';
+const TIMELINE_SYNC_URL = 'https://vya-loveyou-default-rtdb.asia-southeast1.firebasedatabase.app/timeline.json';
 
 const HEN_KEY = 'vya.hen';
+const TIMELINE_KEY = 'vya.timeline';
 const WDAY = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
 let henData = null;
 
@@ -1455,11 +1515,14 @@ const planBox = document.getElementById('planBox');
 const henCard = document.getElementById('dCard');
 const dDate   = document.getElementById('dDate');
 const dTime   = document.getElementById('dTime');
+const dPlace  = document.getElementById('dPlace');
 const dMsg    = document.getElementById('dMsg');
 const dNote   = document.getElementById('dNote');
 const dJump   = document.getElementById('dJump');
 const hudNext = document.getElementById('hudNext');
 const btnNo   = document.getElementById('btnNo');
+const doneBox = document.getElementById('doneBox');
+const dHighlight = document.getElementById('dHighlight');
 
 /* ---------- đóng gói để nhét vừa một đường link ---------- */
 function packHen(o){
@@ -1547,9 +1610,13 @@ function renderHen(){
   planBox.classList.remove('in');
   document.getElementById('cdDay').textContent = fmtHenDay(henData.date);
   document.getElementById('cdTime').textContent = henData.time || '';
+  const placeEl = document.getElementById('cdPlace');
+  placeEl.textContent = henData.place || '';
+  placeEl.hidden = !henData.place;
   const msgEl = document.getElementById('cdMsg');
   msgEl.textContent = henData.msg ? '\u201C' + henData.msg + '\u201D' : '';
   msgEl.hidden = !henData.msg;
+  doneBox.hidden = true; doneBox.classList.remove('on'); dHighlight.value = '';
   document.getElementById('hudNextV').textContent =
     henData.date.slice(8) + '.' + henData.date.slice(5, 7) + (henData.time ? ' · ' + henData.time : '');
   document.getElementById('askEyebrow').textContent = 'Đã chốt · chờ tới ngày';
@@ -1704,6 +1771,7 @@ function openPlan(){
   dDate.min = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
   dDate.value = validHen(henData) ? henData.date : nextSaturday();
   dTime.value = validHen(henData) && henData.time ? henData.time : '19:00';
+  dPlace.value = validHen(henData) ? (henData.place || '') : '';
   dMsg.value = validHen(henData) ? (henData.msg || '') : '';
   henCard.hidden = true;
   henCard.classList.remove('in');
@@ -1725,6 +1793,7 @@ dJump.addEventListener('click', () => {
 async function saveHen(){
   if (!dDate.value){ henNote('Em chọn ngày giúp anh với', true); return; }
   const o = { date: dDate.value, time: dTime.value || '19:00',
+              place: dPlace.value.trim().slice(0, 80),
               msg: dMsg.value.trim().slice(0, 200), savedAt: Date.now() };
   henData = o;
   writeLocalHen(o);
@@ -1806,7 +1875,8 @@ function resetHen(){
   henCard.hidden = true;  henCard.classList.remove('in');
   dJump.hidden = true;
   hudNext.classList.remove('on');
-  dDate.value = ''; dTime.value = ''; dMsg.value = '';
+  dDate.value = ''; dTime.value = ''; dPlace.value = ''; dMsg.value = '';
+  doneBox.hidden = true; doneBox.classList.remove('on'); dHighlight.value = '';
   henNote('');
   document.getElementById('askEyebrow').textContent = 'Đề nghị · chờ em trả lời';
 
@@ -1836,6 +1906,92 @@ addEventListener('hashchange', () => {                  /* gõ thẳng #reset v�
     const best = newerHen(henData, srv);
     if (best && best !== henData){ henData = best; writeLocalHen(best); renderHen(); }
     else if (validHen(henData) && SYNC_URL && !srv) pushHen(henData);   /* máy chủ mới bật: đẩy lên */
+  });
+})();
+
+/* ==================== con đường hẹn hò ====================
+   Mỗi lần bấm "Đã đi rồi ♥" ở thẻ hẹn, buổi đó được vẽ thêm thành một điểm mới
+   trên con đường trong chương "Ngày ấy" — ngày nào, đi đâu, có gì thú vị, nhìn
+   một lượt là biết hết. Điểm gốc "Đêm đầu tiên" đứng cố định trong HTML, JS chỉ
+   nối thêm các điểm sau vào phía dưới nó theo đúng thứ tự thời gian. */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+const roadTrack = document.getElementById('roadTrack');
+let timelineData = [];
+
+function readLocalTimeline(){
+  try { return JSON.parse(localStorage.getItem(TIMELINE_KEY) || '[]'); }
+  catch (e){ return []; }
+}
+function writeLocalTimeline(arr){
+  try { localStorage.setItem(TIMELINE_KEY, JSON.stringify(arr)); } catch (e){}
+}
+async function askTimeline(opts){
+  if (!TIMELINE_SYNC_URL) return null;
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(TIMELINE_SYNC_URL, Object.assign({ signal: ctl.signal }, opts));
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e){ return null; }
+  finally { clearTimeout(timer); }
+}
+const pushTimeline = arr => askTimeline({ method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify(arr) }).then(r => r !== null);
+const pullTimeline = () => askTimeline({}).then(j => Array.isArray(j) ? j : null);
+
+function renderRoad(){
+  roadTrack.querySelectorAll('.road-item:not(.origin)').forEach(el => el.remove());
+  timelineData.slice()
+    .sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')))
+    .forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'road-item';
+      el.innerHTML =
+        '<div class="road-dot"></div>' +
+        '<div class="road-date">' + escapeHtml(fmtHenDay(item.date).split(' · ')[1]) + '</div>' +
+        (item.place ? '<div class="road-place">' + escapeHtml(item.place) + '</div>' : '') +
+        (item.note ? '<div class="road-note">' + escapeHtml(item.note) + '</div>' : '');
+      roadTrack.appendChild(el);
+      requestAnimationFrame(() => el.classList.add('in'));
+    });
+}
+
+document.getElementById('dDone').addEventListener('click', () => {
+  const opening = !doneBox.classList.contains('on');
+  doneBox.hidden = false;
+  requestAnimationFrame(() => doneBox.classList.toggle('on', opening));
+  if (opening) dHighlight.focus();
+});
+
+document.getElementById('dConfirmDone').addEventListener('click', () => {
+  if (!validHen(henData)) return;
+  timelineData.push({
+    date: henData.date, time: henData.time || '',
+    place: henData.place || '', note: dHighlight.value.trim().slice(0, 240)
+  });
+  writeLocalTimeline(timelineData);
+  renderRoad();
+  if (TIMELINE_SYNC_URL) pushTimeline(timelineData);
+  resetHen();
+  henNote('Đã thêm vào con đường ♥');
+  document.getElementById('act-hill').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+(function initTimeline(){
+  timelineData = readLocalTimeline();
+  renderRoad();
+  pullTimeline().then(srv => {
+    if (Array.isArray(srv)){
+      timelineData = srv;
+      writeLocalTimeline(srv);
+      renderRoad();
+    } else if (TIMELINE_SYNC_URL && timelineData.length){
+      pushTimeline(timelineData);            /* máy chủ mới bật hoặc trống: đẩy dữ liệu máy lên */
+    }
   });
 })();
 
