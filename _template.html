@@ -496,7 +496,7 @@ footer .f2{font-family:var(--voice);font-style:italic;color:#7f93ab;margin-top:1
   Cao độ ≈ 116 m
 </div>
 <div class="hud hud-tr">
-  Nguồn sáng <b id="hudStars">—</b><br>
+  Lượt truy cập <b id="hudVisits">—</b><br>
   Hình thái <b id="hudForm">Chân dung</b><br>
   <span id="hudClock">—</span>
   <span id="hudNext">Hẹn tới <b id="hudNextV">—</b></span>
@@ -2510,7 +2510,30 @@ async function boot(){
   let reveal = 0;
   document.getElementById('boot').classList.add('off');
   document.getElementById('starCount').textContent = N.toLocaleString('vi-VN');
-  document.getElementById('hudStars').textContent = N.toLocaleString('vi-VN');
+
+  /* Dem luot truy cap: 1 luot = 1 lan mo trang MOI sau khi da qua 10 phut ke tu
+     luot truoc do; reload lien tuc trong 10 phut khong tinh them. Luu trong
+     localStorage cua trinh duyet nay (khong co server nen khong gop duoc nhieu
+     may/nhieu nguoi thanh 1 con so chung). */
+  (function(){
+    const KEY_COUNT = 'vya_visit_count';
+    const KEY_LAST = 'vya_visit_last';
+    const WINDOW_MS = 10 * 60 * 1000;
+    const hudVisits = document.getElementById('hudVisits');
+    try {
+      const now = Date.now();
+      const last = parseInt(localStorage.getItem(KEY_LAST) || '0', 10);
+      let count = parseInt(localStorage.getItem(KEY_COUNT) || '0', 10);
+      if (!last || (now - last) > WINDOW_MS){
+        count += 1;
+        localStorage.setItem(KEY_LAST, String(now));
+        localStorage.setItem(KEY_COUNT, String(count));
+      }
+      if (hudVisits) hudVisits.textContent = count.toLocaleString('vi-VN');
+    } catch (e) {
+      if (hudVisits) hudVisits.textContent = '1';
+    }
+  })();
 
   function frame(){
     requestAnimationFrame(frame);
